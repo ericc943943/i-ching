@@ -79,10 +79,10 @@
     0%{ clip-path:circle(150vmax at var(--cx,50%) var(--cy,50%)); }
     100%{ clip-path:circle(7px at var(--cx,50%) var(--cy,50%)); }
   }
-  .prompt-card{text-align:center;}
+  .prompt-card{text-align:center;padding-top:20px;}
   .breathe-dot{width:30px;height:30px;border-radius:50%;
     background:radial-gradient(circle, var(--dot) 0%, var(--dot) 22%, transparent 68%);
-    margin:4px auto 10px;animation:breathe 4.5s ease-in-out infinite;}
+    margin:0 auto 20px;animation:breathe 4.5s ease-in-out infinite;}
   @keyframes breathe{
     0%,100%{transform:scale(1);opacity:.55;}
     50%{transform:scale(1.75);opacity:1;}
@@ -102,7 +102,7 @@
 <body>
 <div class="intro-overlay" id="introOverlay"></div>
 <div class="page">
-  <div class="eyebrow">起卦 · 觀卦 · 玩味</div>
+  <div class="eyebrow">起卦、觀卦、品卦</div>
   <h1>易經卜卦</h1>
 
   <div class="card prompt-card">

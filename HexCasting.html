@@ -41,7 +41,7 @@
     padding:9px 22px;border-radius:999px;cursor:pointer;}
   #confirmYes{background:var(--ink);color:var(--surface);border:1px solid var(--ink);}
   #confirmNo{background:transparent;color:var(--sub);border:1px solid var(--line);}
-  .cast-hint{text-align:center;font-size:12px;color:var(--sub);font-family:var(--font-label);margin:0;}
+  .cast-hint{text-align:center;font-size:14px;color:var(--sub);font-family:var(--font-label);margin:8px 0 20px;line-height:1.9;white-space:pre-line;}
   .progress{text-align:center;font-family:var(--font-label);font-size:12px;color:var(--jade);
     min-height:16px;margin-top:10px;}
   .result{display:none;}
@@ -100,7 +100,7 @@
     0%{ clip-path:circle(150vmax at var(--cx,50%) var(--cy,50%)); }
     100%{ clip-path:circle(7px at var(--cx,50%) var(--cy,50%)); }
   }
-  .prompt-card{text-align:center;padding-top:22px;}
+  .prompt-card{text-align:center;padding-top:22px;padding-bottom:22px;}
   .breathe-dot{width:30px;height:30px;border-radius:50%;
     background:radial-gradient(circle, var(--dot) 0%, var(--dot) 22%, transparent 68%);
     margin:0 auto 18px;animation:breathe 4.5s ease-in-out infinite;}
@@ -110,10 +110,8 @@
   }
   .breathe-hint{font-family:var(--font-label);font-size:11px;letter-spacing:.1em;color:var(--sub);
     text-align:center;margin:0 0 20px;}
-  .prompt-text{font-size:14px;line-height:1.9;color:var(--sub);margin:0 0 20px;text-align:center;}
-  .prompt-text.pop{animation:pop .4s ease;}
   #question{width:100%;min-height:56px;resize:vertical;background:transparent;
-    border:1px solid var(--line);border-radius:4px;padding:12px 14px;margin-bottom:22px;
+    border:1px solid var(--line);border-radius:4px;padding:12px 14px;margin-bottom:0;
     font-family:var(--font-label);font-size:13px;color:var(--ink);line-height:1.7;text-align:center;}
   #question:focus{outline:none;border-color:var(--gold);}
   #question::placeholder{color:var(--sub);text-align:center;}
@@ -132,7 +130,6 @@
     <div class="breathe-dot"></div>
     <p class="breathe-hint">跟著圓點的節奏，慢慢吸氣、吐氣</p>
     <textarea id="question" placeholder="（選填）寫下你想問的事，起卦後會一併記錄"></textarea>
-    <p class="prompt-text" id="promptText"></p>
   </div>
 
   <div class="card" id="hexCard">
@@ -140,6 +137,8 @@
     <div class="coins" id="coins" style="margin-top:26px;">
       <div class="coin">－</div><div class="coin">－</div><div class="coin">－</div>
     </div>
+    <div class="progress" id="progress"></div>
+    <p class="cast-hint" id="castHint">深呼吸，靜下心來，在心中默念你想問的事。<br>準備好了，就按下按鈕。</p>
     <button class="cast-btn" id="castBtn">擲 卦</button>
     <div class="confirm-row" id="confirmRow">
       <span class="confirm-text">確定要重新起卦嗎？這次結果仍會留在下方的歷史記錄。</span>
@@ -148,8 +147,6 @@
         <button id="confirmNo">取消</button>
       </div>
     </div>
-    <p class="cast-hint">三枚銅錢，親手點擊六次，由下而上逐爻成卦</p>
-    <div class="progress" id="progress"></div>
   </div>
 
   <div class="card result" id="resultCard"></div>
@@ -344,16 +341,9 @@ const hexLinesEl = document.getElementById('hexLines');
 const resultCard = document.getElementById('resultCard');
 const historyEl = document.getElementById('history');
 const questionEl = document.getElementById('question');
-const promptEl = document.getElementById('promptText');
 
-const PROMPT_FIRST = '深呼吸，靜下心來，在心中默念你想問的事。\n準備好了，就按下「擲第 1 爻」。';
-const promptNext = n => `再深呼吸一次，在心中重複默念你的問題，\n準備好了就按下「擲第 ${n} 爻」。`;
-
-function setPrompt(text){
-  promptEl.innerHTML = text.replace(/\n/g, '<br>');
-  promptEl.classList.remove('pop'); void promptEl.offsetWidth; promptEl.classList.add('pop');
-}
-setPrompt(PROMPT_FIRST);
+const PROMPT_FIRST = '深呼吸，靜下心來，在心中默念你想問的事。\n準備好了，就按下按鈕。';
+const promptNext = n => `再次深呼吸。吸氣……吐氣……於心中再默念一次你的問題。\n吸氣……………吐氣……………`;
 
 (function playIntro(){
   const overlay = document.getElementById('introOverlay');
@@ -405,7 +395,7 @@ confirmYes.addEventListener('click', () => {
   questionEl.value = '';
   questionEl.disabled = false;
   castBtn.textContent = '擲第 1 爻';
-  setPrompt(PROMPT_FIRST);
+  castHintEl.innerHTML = PROMPT_FIRST.replace(/\n/g, '<br>');
   progressEl.textContent = '';
   coinsEl.querySelectorAll('.coin').forEach(el=>{
     el.textContent = '－';
@@ -415,7 +405,26 @@ confirmYes.addEventListener('click', () => {
   castBtn.style.display = 'block';
 });
 
-function tossOnce(){
+const castHintEl = document.getElementById('castHint');
+
+function typewriterReveal(text, el, charDelay){
+  return new Promise(resolve=>{
+    el.textContent = '';
+    let i = 0;
+    (function step(){
+      if(i < text.length){
+        el.textContent += text[i];
+        i++;
+        setTimeout(step, charDelay);
+      } else {
+        resolve();
+      }
+    })();
+  });
+}
+function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+async function tossOnce(){
   if(castLines.length===0){
     resultCard.classList.remove('show');
     resetRows();
@@ -444,15 +453,23 @@ function tossOnce(){
     document.getElementById('hexCard').scrollIntoView({behavior:'smooth', block:'start'});
   }, 200);
 
-  if(castLines.length < 6){
+  const isLast = castLines.length === 6;
+  const nextPromptText = isLast
+    ? '六爻已成，靜下心看看卦象怎麼說。想重新起一卦，按下「再起一卦」。'
+    : promptNext(castLines.length+1);
+
+  castBtn.disabled = true;
+  await typewriterReveal(nextPromptText, castHintEl, 150);
+  await wait(1000);
+  castBtn.disabled = false;
+
+  if(!isLast){
     castBtn.textContent = `擲第 ${castLines.length+1} 爻`;
-    setPrompt(promptNext(castLines.length+1));
   } else {
     finishCast(castLines);
     castLines = [];
     hasResult = true;
     castBtn.textContent = '再起一卦';
-    setPrompt('六爻已成，靜下心看看卦象怎麼說。想重新起一卦，按下「再起一卦」。');
   }
 }
 

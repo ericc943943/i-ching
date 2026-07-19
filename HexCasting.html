@@ -57,15 +57,36 @@
   .no-move{width:8px;flex-shrink:0;}
   .names{display:flex;justify-content:space-between;align-items:baseline;margin:26px 0 4px;flex-wrap:wrap;gap:8px;}
   .gua-name{font-family:var(--font-head);font-weight:700;font-size:22px;}
-  .gua-num{font-family:var(--font-label);font-size:11px;color:var(--sub);letter-spacing:.1em;margin-right:6px;}
+  .gua-num{font-family:var(--font-label);font-weight:400;font-size:11px;color:var(--sub);letter-spacing:.1em;margin-right:6px;}
   .arrow{color:var(--sub);font-size:13px;font-family:var(--font-label);}
   .zhi-name{font-family:var(--font-head);font-weight:700;font-size:17px;color:var(--sub);}
   .gua-ci{font-size:15px;line-height:1.9;margin:12px 0 0;}
+  .zhi-gua-ci{color:var(--sub);margin-top:10px;}
+  .zhi-label{display:block;font-family:var(--font-label);font-size:11px;letter-spacing:.1em;
+    color:var(--gold);text-transform:uppercase;margin-bottom:4px;}
+  .hex-compare{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:26px 0 0;}
+  .hex-compare::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:1px;
+    background:var(--line);transform:translateX(-0.5px);}
+  .hex-arrow{position:absolute;left:50%;top:11px;transform:translateX(-50%);
+    background:var(--surface);padding:2px 8px;font-family:var(--font-label);font-size:12px;
+    color:var(--sub);white-space:nowrap;z-index:1;}
+  .hex-col .col-num-name{text-align:center;margin-bottom:6px;}
+  .hex-col .col-gua-num{display:block;font-family:var(--font-label);font-size:11px;
+    color:var(--sub);letter-spacing:.1em;margin-bottom:2px;}
+  .hex-col .col-gua-name{font-family:var(--font-head);font-weight:700;font-size:18px;}
+  .hex-col .col-label{text-align:center;font-family:var(--font-label);font-size:11px;letter-spacing:.15em;
+    color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
+  .hex-col .col-gua-ci{font-size:13px;line-height:1.8;text-align:center;color:var(--ink);}
+  .zhi-col .col-gua-name{color:var(--sub);}
   .section-title{font-family:var(--font-label);font-size:11px;letter-spacing:.15em;color:var(--gold);
-    text-transform:uppercase;margin:26px 0 10px;}
+    text-transform:uppercase;margin:26px 0 10px;text-align:center;}
   .yao-ci-item{font-size:14px;line-height:1.9;margin-bottom:8px;}
   .yao-ci-item b{font-family:var(--font-head);font-weight:700;color:var(--accent);margin-right:6px;}
-  .no-change{font-family:var(--font-label);font-size:13px;color:var(--sub);margin-top:26px;}
+  .yao-ci-item.moving-line{background:rgba(185,132,85,.14);border-radius:4px;padding:8px 10px;margin:0 -10px 8px;}
+  .no-change{font-family:var(--font-label);font-size:13px;color:var(--sub);margin-top:26px;text-align:center;}
+  .hex-single{margin:26px 0 0;text-align:center;}
+  .hex-single .col-num-name{margin-bottom:6px;}
+  .gua-ci-centered{font-size:15px;line-height:1.9;margin:10px 0 0;text-align:center;}
   .history-title{font-family:var(--font-label);font-size:12px;letter-spacing:.15em;color:var(--sub);
     text-transform:uppercase;margin-bottom:14px;}
   .hist-item{display:flex;justify-content:space-between;font-size:13px;padding:10px 0;
@@ -93,9 +114,11 @@
   .prompt-text.pop{animation:pop .4s ease;}
   #question{width:100%;min-height:56px;resize:vertical;background:transparent;
     border:1px solid var(--line);border-radius:4px;padding:12px 14px;margin-bottom:22px;
-    font-family:var(--font-label);font-size:13px;color:var(--ink);line-height:1.7;}
+    font-family:var(--font-label);font-size:13px;color:var(--ink);line-height:1.7;text-align:center;}
   #question:focus{outline:none;border-color:var(--gold);}
-  #question::placeholder{color:var(--sub);}
+  #question::placeholder{color:var(--sub);text-align:center;}
+  #question::-webkit-input-placeholder{color:var(--sub);text-align:center;}
+  #question::-moz-placeholder{color:var(--sub);text-align:center;opacity:1;}
   .asked{font-family:var(--font-label);font-size:12px;color:var(--sub);margin:0 0 4px;}
 </style>
 </head>
@@ -429,7 +452,7 @@ function tossOnce(){
     castLines = [];
     hasResult = true;
     castBtn.textContent = '再起一卦';
-    setPrompt('六爻已成，靜下心看看卦象怎麼說。想重新起一卦，按下「再起一卦」（會先跟你確認）。');
+    setPrompt('六爻已成，靜下心看看卦象怎麼說。想重新起一卦，按下「再起一卦」。');
   }
 }
 
@@ -457,26 +480,42 @@ function renderResult(hex, zhiHex, lines, question){
   if(question){
     html += `<p class="asked">所問：${escapeHtml(question)}</p>`;
   }
-  html += `<div class="names"><span><span class="gua-num">第${hex.number}卦</span><span class="gua-name">${hex.name}</span></span>`;
   if(zhiHex){
-    html += `<span class="arrow">變之 →</span><span class="zhi-name">${zhiHex.name}</span>`;
+    html += `<div class="hex-compare">
+      <div class="hex-arrow"><b>—</b>變之→</div>
+      <div class="hex-col">
+        <div class="col-num-name"><span class="col-gua-num">第${hex.number}卦</span><span class="col-gua-name">${hex.name}</span></div>
+        <div class="col-label">本卦</div>
+        <p class="col-gua-ci">${hex.guaci}</p>
+      </div>
+      <div class="hex-col zhi-col">
+        <div class="col-num-name"><span class="col-gua-num">第${zhiHex.number}卦</span><span class="col-gua-name">${zhiHex.name}</span></div>
+        <div class="col-label">之卦</div>
+        <p class="col-gua-ci">${zhiHex.guaci}</p>
+      </div>
+    </div>`;
+  } else {
+    html += `<div class="hex-single">
+      <div class="col-num-name"><span class="col-gua-num">第${hex.number}卦</span><span class="col-gua-name">${hex.name}</span></div>
+      <p class="gua-ci-centered">${hex.guaci}</p>
+    </div>`;
   }
-  html += '</div>';
-  html += `<p class="gua-ci">${hex.guaci}</p>`;
 
   const movingLines = lines.map((l,idx)=>({...l, pos:idx})).filter(l=>l.moving);
+  const movingSet = new Set(movingLines.map(l=>l.pos));
+
+  html += `<div class="section-title">爻辭</div>`;
+  for(let pos=0; pos<6; pos++){
+    const label = lineLabel(pos, lines[pos].bit===1);
+    const isMoving = movingSet.has(pos);
+    html += `<div class="yao-ci-item${isMoving?' moving-line':''}"><b>${label}</b>${hex.yao[pos]}</div>`;
+  }
+  if(movingLines.length===6 && (hex.number===1 || hex.number===2)){
+    const label = hex.number===1 ? '用九' : '用六';
+    html += `<div class="yao-ci-item moving-line"><b>${label}</b>${hex.yong}</div>`;
+  }
   if(movingLines.length===0){
     html += '<p class="no-change">六爻皆靜，以卦辭為斷。</p>';
-  } else if(movingLines.length===6 && (hex.number===1 || hex.number===2)){
-    const label = hex.number===1 ? '用九' : '用六';
-    html += `<div class="section-title">爻辭（變爻）</div>`;
-    html += `<div class="yao-ci-item"><b>${label}</b>${hex.yong}</div>`;
-  } else {
-    html += `<div class="section-title">爻辭（變爻）</div>`;
-    movingLines.forEach(l=>{
-      const label = lineLabel(l.pos, l.bit===1);
-      html += `<div class="yao-ci-item"><b>${label}</b>${hex.yao[l.pos]}</div>`;
-    });
   }
 
   resultCard.innerHTML = html;

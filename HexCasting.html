@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>易經卜卦</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#F2EEE3; --surface:#FBF8F1; --ink:#33291F; --sub:#6b6255;
@@ -86,6 +86,9 @@
   .no-change{font-family:var(--font-label);font-size:13px;color:var(--sub);margin-top:26px;text-align:center;}
   .hex-single{margin:26px 0 0;text-align:center;}
   .hex-single .col-num-name{margin-bottom:6px;}
+  .hex-single .col-gua-num{display:block;font-family:var(--font-label);font-size:11px;
+    color:var(--sub);letter-spacing:.1em;margin-bottom:2px;}
+  .hex-single .col-gua-name{font-family:var(--font-head);font-weight:700;font-size:18px;}
   .gua-ci-centered{font-size:15px;line-height:1.9;margin:10px 0 0;text-align:center;}
   .history-title{font-family:var(--font-label);font-size:12px;letter-spacing:.15em;color:var(--sub);
     text-transform:uppercase;margin-bottom:14px;}
@@ -103,7 +106,7 @@
   .prompt-card{text-align:center;padding-top:22px;padding-bottom:22px;}
   .breathe-dot{width:30px;height:30px;border-radius:50%;
     background:radial-gradient(circle, var(--dot) 0%, var(--dot) 22%, transparent 68%);
-    margin:0 auto 18px;animation:breathe 4.5s ease-in-out infinite;}
+    margin:0 auto 18px;animation:breathe 6s ease-in-out infinite;}
   @keyframes breathe{
     0%,100%{transform:scale(1);opacity:.55;}
     50%{transform:scale(1.75);opacity:1;}
@@ -126,7 +129,7 @@
   <div class="eyebrow">起卦、觀卦、品卦</div>
   <h1>易經卜卦</h1>
 
-  <div class="card prompt-card">
+  <div class="card prompt-card" id="inputCard">
     <div class="breathe-dot"></div>
     <p class="breathe-hint">跟著圓點的節奏，慢慢吸氣、吐氣</p>
     <textarea id="question" placeholder="（選填）寫下你想問的事，起卦後會一併記錄"></textarea>
@@ -343,7 +346,7 @@ const historyEl = document.getElementById('history');
 const questionEl = document.getElementById('question');
 
 const PROMPT_FIRST = '深呼吸，靜下心來，在心中默念你想問的事。\n準備好了，就按下按鈕。';
-const promptNext = n => `再次深呼吸。吸氣……吐氣……於心中再默念一次你的問題。\n吸氣……………吐氣……………`;
+const promptNext = n => `再次深呼吸。\n吸氣……吐氣……於心中再默念一次你的問題。\n吸氣……………吐氣……………`;
 
 (function playIntro(){
   const overlay = document.getElementById('introOverlay');
@@ -422,7 +425,6 @@ function typewriterReveal(text, el, charDelay){
     })();
   });
 }
-function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
 
 async function tossOnce(){
   if(castLines.length===0){
@@ -430,6 +432,9 @@ async function tossOnce(){
     resetRows();
     currentQuestion = questionEl.value.trim();
     questionEl.disabled = true;
+    setTimeout(() => {
+      document.getElementById('inputCard').scrollIntoView({behavior:'smooth', block:'start'});
+    }, 100);
   }
 
   const c1=tossCoin(), c2=tossCoin(), c3=tossCoin();
@@ -449,23 +454,19 @@ async function tossOnce(){
   const pos = castLines.length-1;
   addRow(pos, yang?1:0, moving);
   progressEl.textContent = `第 ${pos+1} / 6 爻・${POSITIONS[pos]}${moving?'（動）':''}`;
-  setTimeout(() => {
-    document.getElementById('hexCard').scrollIntoView({behavior:'smooth', block:'start'});
-  }, 200);
 
   const isLast = castLines.length === 6;
   const nextPromptText = isLast
-    ? '六爻已成，靜下心看看卦象怎麼說。想重新起一卦，按下「再起一卦」。'
+    ? '六爻已成，靜下心看看卦象怎麼說。\n若要再起一卦，請寫下新的問題，再次按下按鈕即可。'
     : promptNext(castLines.length+1);
 
-  castBtn.disabled = true;
-  await typewriterReveal(nextPromptText, castHintEl, 150);
-  await wait(1000);
-  castBtn.disabled = false;
-
   if(!isLast){
+    castBtn.disabled = true;
+    await typewriterReveal(nextPromptText, castHintEl, 150);
+    castBtn.disabled = false;
     castBtn.textContent = `擲第 ${castLines.length+1} 爻`;
   } else {
+    castHintEl.textContent = nextPromptText;
     finishCast(castLines);
     castLines = [];
     hasResult = true;

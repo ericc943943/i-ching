@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>易經卜卦</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#7A5230">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="易經卜卦">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -25,6 +34,7 @@
   .coin{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--gold);
     display:flex;align-items:center;justify-content:center;font-family:var(--font-head);
     font-size:15px;color:var(--gold);transition:transform .25s, background .2s, color .2s, border-color .2s;}
+  .coin.small-text{font-size:10px;}
   .coin.yang{background:var(--surface);color:var(--gold);border-color:var(--gold);}
   .coin.yin{background:var(--gold);color:var(--surface);border-color:var(--gold);}
   .coin.flip{animation:flip .5s ease;}
@@ -33,6 +43,11 @@
     letter-spacing:.1em;padding:10px 28px;border-radius:999px;border:1px solid var(--ink);
     background:transparent;color:var(--ink);cursor:pointer;}
   .cast-btn:disabled{opacity:.4;cursor:default;}
+  #hexCard{position:relative;}
+  .quick-cast-btn{position:absolute;bottom:8px;right:10px;margin:0;background:none;border:none;
+    font-family:var(--font-label);font-size:11px;color:#b5ac9e;text-decoration:none;
+    cursor:pointer;}
+  .quick-cast-btn:disabled{opacity:.4;cursor:default;}
   .confirm-row{display:none;text-align:center;}
   .confirm-text{display:block;font-family:var(--font-label);font-size:13px;color:var(--sub);
     margin-bottom:14px;line-height:1.7;}
@@ -64,34 +79,72 @@
   .zhi-gua-ci{color:var(--sub);margin-top:10px;}
   .zhi-label{display:block;font-family:var(--font-label);font-size:11px;letter-spacing:.1em;
     color:var(--gold);text-transform:uppercase;margin-bottom:4px;}
-  .hex-compare{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:26px 0 0;}
-  .hex-compare::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:1px;
+  .hex-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;margin:26px 0 0;align-items:stretch;}
+  .hex-stack{margin:26px 0 0;}
+  .hex-stack-item{text-align:center;}
+  .hex-stack-divider{height:1px;background:var(--line);margin:24px 0;}
+  .hex-arrow-col{position:relative;display:flex;align-items:center;justify-content:center;}
+  .hex-arrow-col::before{content:'';position:absolute;top:0;bottom:0;left:50%;width:1px;
     background:var(--line);transform:translateX(-0.5px);}
-  .hex-arrow{position:absolute;left:50%;top:11px;transform:translateX(-50%);
-    background:var(--surface);padding:2px 8px;font-family:var(--font-label);font-size:12px;
-    color:var(--sub);white-space:nowrap;z-index:1;}
-  .hex-col .col-num-name{text-align:center;margin-bottom:6px;}
+  .hex-arrow{position:relative;background:var(--surface);padding:2px 8px;font-family:var(--font-label);
+    font-size:12px;color:var(--sub);white-space:nowrap;z-index:1;}
+  .hex-col .col-num-name{text-align:center;margin-bottom:8px;}
   .hex-col .col-gua-num{display:block;font-family:var(--font-label);font-size:11px;
-    color:var(--sub);letter-spacing:.1em;margin-bottom:2px;}
+    color:var(--sub);letter-spacing:.1em;margin-bottom:8px;}
   .hex-col .col-gua-name{font-family:var(--font-head);font-weight:700;font-size:18px;}
   .hex-col .col-label{text-align:center;font-family:var(--font-label);font-size:11px;letter-spacing:.15em;
-    color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
+    color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
   .hex-col .col-gua-ci{font-size:13px;line-height:1.8;text-align:center;color:var(--ink);}
-  .zhi-col .col-gua-name{color:var(--sub);}
+  .zhi-col .col-gua-name,.zhi-col .col-symbol{color:var(--sub);}
   .section-title{font-family:var(--font-label);font-size:11px;letter-spacing:.15em;color:var(--gold);
     text-transform:uppercase;margin:26px 0 10px;text-align:center;}
   .yao-ci-item{font-size:14px;line-height:1.9;margin-bottom:8px;}
   .yao-ci-item b{font-family:var(--font-head);font-weight:700;color:var(--accent);margin-right:6px;}
   .yao-ci-item.moving-line{background:rgba(185,132,85,.14);border-radius:4px;padding:8px 10px;margin:0 -10px 8px;}
   .no-change{font-family:var(--font-label);font-size:13px;color:var(--sub);margin-top:26px;text-align:center;}
+  .version-toggle{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+    gap:8px;margin:0 0 20px;}
+  .version-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+  .version-btn{font-family:var(--font-label);font-size:11px;letter-spacing:.03em;
+    padding:5px 12px;border-radius:999px;border:1px solid var(--line);
+    background:transparent;color:var(--sub);cursor:pointer;transition:background .15s,color .15s,border-color .15s;}
+  .version-btn.active{background:var(--ink);color:var(--surface);border-color:var(--ink);}
+  .version-btn.wilhelm-btn{border-color:var(--gold);color:var(--gold);text-decoration:none;
+    display:inline-block;}
+  .version-btn.wilhelm-btn:hover{background:var(--gold);color:var(--surface);}
   .hex-single{margin:26px 0 0;text-align:center;}
-  .hex-single .col-num-name{margin-bottom:6px;}
+  .hex-single .col-num-name{margin-bottom:8px;}
   .hex-single .col-gua-num{display:block;font-family:var(--font-label);font-size:11px;
-    color:var(--sub);letter-spacing:.1em;margin-bottom:2px;}
+    color:var(--sub);letter-spacing:.1em;margin-bottom:8px;}
   .hex-single .col-gua-name{font-family:var(--font-head);font-weight:700;font-size:18px;}
+  .col-symbol{font-size:30px;line-height:1;color:var(--ink);margin:6px 0 4px;text-align:center;}
+  .hex-stack-item .col-num-name{margin-bottom:8px;}
+  .hex-stack-item .col-gua-num{display:block;font-family:var(--font-label);font-size:11px;
+    color:var(--sub);letter-spacing:.1em;margin-bottom:8px;}
+  .hex-stack-item .col-gua-name{font-family:var(--font-head);font-weight:700;font-size:18px;}
+  .hex-stack-item .col-label{text-align:center;font-family:var(--font-label);font-size:11px;letter-spacing:.15em;
+    color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
+  .hex-stack-item:last-child .col-gua-name,.hex-stack-item:last-child .col-symbol{color:var(--sub);}
   .gua-ci-centered{font-size:15px;line-height:1.9;margin:10px 0 0;text-align:center;}
   .history-title{font-family:var(--font-label);font-size:12px;letter-spacing:.15em;color:var(--sub);
     text-transform:uppercase;margin-bottom:14px;}
+  .hex-grid{display:grid;grid-template-columns:repeat(8, 1fr);gap:0;border:1px solid var(--line);}
+  .hex-grid-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    border:1px solid var(--line);
+    font-family:var(--font-label);cursor:pointer;border-radius:3px;transition:background .15s;}
+  .hex-grid-cell:active{background:rgba(185,132,85,.2);}
+  .hex-grid-symbol{font-size:15px;line-height:1;color:var(--ink);}
+  .hex-grid-num{font-size:8px;color:var(--sub);margin-top:1px;font-family:ui-monospace,'SF Mono',Menlo,monospace;}
+  .hex-modal-overlay{display:none;position:fixed;inset:0;background:rgba(51,41,31,.5);
+    z-index:100;align-items:center;justify-content:center;padding:24px;}
+  .hex-modal-overlay.show{display:flex;}
+  .hex-modal-card{background:var(--surface);border-radius:6px;max-width:440px;width:100%;
+    max-height:85vh;overflow-y:auto;padding:32px 24px;position:relative;}
+  .hex-modal-close{position:absolute;top:14px;right:14px;background:none;border:none;
+    font-size:16px;color:var(--sub);cursor:pointer;padding:6px;line-height:1;}
+  .hex-modal-lang{position:absolute;top:14px;left:14px;font-family:'Noto Sans TC',sans-serif;
+    font-size:11px;letter-spacing:.05em;padding:6px 12px;border-radius:999px;
+    border:1px solid rgba(51,41,31,.15);background:var(--surface);color:var(--sub);cursor:pointer;}
   .hist-item{display:flex;justify-content:space-between;font-size:13px;padding:10px 0;
     border-top:1px solid var(--line);color:var(--sub);}
   .hist-item:first-child{border-top:none;}
@@ -125,13 +178,14 @@
 </head>
 <body>
 <div class="intro-overlay" id="introOverlay"></div>
+<button id="langToggle" style="position:fixed;top:16px;left:16px;z-index:50;font-family:'Noto Sans TC',sans-serif;font-size:11px;letter-spacing:.05em;padding:6px 12px;border-radius:999px;border:1px solid rgba(51,41,31,.15);background:#FBF8F1;color:#6b6255;cursor:pointer;">EN</button>
 <div class="page">
-  <div class="eyebrow">起卦、觀卦、品卦</div>
-  <h1>易經卜卦</h1>
+  <div class="eyebrow" id="eyebrowText">起卦、觀卦、品卦</div>
+  <h1 id="pageTitle">易經卜卦</h1>
 
   <div class="card prompt-card" id="inputCard">
     <div class="breathe-dot"></div>
-    <p class="breathe-hint">跟著圓點的節奏，慢慢吸氣、吐氣</p>
+    <p class="breathe-hint" id="breatheHint">跟著圓點的節奏，慢慢吸氣、吐氣</p>
     <textarea id="question" placeholder="（選填）寫下你想問的事，起卦後會一併記錄"></textarea>
   </div>
 
@@ -143,8 +197,9 @@
     <div class="progress" id="progress"></div>
     <p class="cast-hint" id="castHint">深呼吸，靜下心來，在心中默念你想問的事。<br>準備好了，就按下按鈕。</p>
     <button class="cast-btn" id="castBtn">擲 卦</button>
+    <button class="quick-cast-btn" id="quickCastBtn">⚡ 快速起卦</button>
     <div class="confirm-row" id="confirmRow">
-      <span class="confirm-text">確定要重新起卦嗎？這次結果仍會留在下方的歷史記錄。</span>
+      <span class="confirm-text" id="confirmText">確定要重新起卦嗎？這次結果仍會留在下方的歷史記錄。</span>
       <div class="confirm-actions">
         <button id="confirmYes">確定，重新起卦</button>
         <button id="confirmNo">取消</button>
@@ -155,15 +210,28 @@
   <div class="card result" id="resultCard"></div>
 
   <div class="card">
-    <div class="history-title">歷史記錄（本次瀏覽）</div>
+    <div class="history-title" id="historyTitle">歷史記錄（本次瀏覽）</div>
     <div id="history"><p class="empty">尚無記錄</p></div>
+  </div>
+
+  <div class="card">
+    <div class="history-title" id="lookupTitle">查詢卦象</div>
+    <div class="hex-grid" id="hexGrid"></div>
+  </div>
+
+  <div class="hex-modal-overlay" id="hexModalOverlay">
+    <div class="hex-modal-card" id="hexModalCard">
+      <button class="hex-modal-close" id="hexModalClose">✕</button>
+      <button class="hex-modal-lang" id="hexModalLang">EN</button>
+      <div id="hexModalBody"></div>
+    </div>
   </div>
 
   <div style="text-align:center;padding:12px 20px 16px;font-family:'Noto Serif TC',serif">
     <a href="https://buy.stripe.com/7sY8wQe1NdhXbkV98G8Vi01" target="_blank" style="display:inline-block;padding:4px 14px;border:1px solid #ddd;border-radius:14px;font-size:12px;color:#888;text-decoration:none;letter-spacing:.08em;transition:all .15s" onmouseover="this.style.borderColor='#bbb';this.style.color='#555'" onmouseout="this.style.borderColor='#ddd';this.style.color='#888'">☕ 請我喝杯咖啡</a>
   </div>
   <div style="text-align:center;padding:16px 20px 24px;font-family:'Noto Serif TC',serif;font-size:11px;color:#bbb;letter-spacing:.05em">
-    <span style="display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0">© 2026 Eric CH / <a href="https://www.therootshollow.com" target="_blank" style="color:inherit;text-decoration:none;">樹根樹洞</a>　·　<a href="https://instagram.com/eric.hypnotist" target="_blank" style="color:#bbb;text-decoration:none;display:inline-flex;align-items:center;gap:4px"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg> @eric.hypnotist</a></span><br>
+    <span style="display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0">© 2026 Eric CH / <a href="https://www.therootshollow.com" target="_blank" style="color:inherit;text-decoration:none;">樹根樹洞</a>　・　<a href="https://instagram.com/eric.hypnotist" target="_blank" style="color:#bbb;text-decoration:none;display:inline-flex;align-items:center;gap:4px"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg> @eric.hypnotist</a></span><br>
     <a href="https://www.therootshollow.com" target="_blank" style="color:#bbb;text-decoration:none">www.therootshollow.com</a>
   </div>
 </div>
@@ -316,6 +384,2335 @@ HEXAGRAMS.forEach(h=>{
   BY_KEY[bits.join('')] = h;
 });
 
+function hexSymbol(number){
+  return String.fromCodePoint(0x4DC0 + number - 1);
+}
+
+// [位置, 長度]：'prefix' 表示真名在最前面（純卦，如乾為天→乾）；
+// 'suffix' 表示真名在最後面（如水雷屯→屯，天雷无妄→无妄）
+const CORE_NAME_PINYIN = {
+  1:'Qián', 2:'Kūn', 3:'Zhūn', 4:'Méng', 5:'Xū', 6:'Sòng', 7:'Shī', 8:'Bǐ',
+  9:'Xiǎo Chù', 10:'Lǚ', 11:'Tài', 12:'Pǐ', 13:'Tóng Rén', 14:'Dà Yǒu', 15:'Qiān',
+  16:'Yù', 17:'Suí', 18:'Gǔ', 19:'Lín', 20:'Guān', 21:'Shì Kè', 22:'Bì', 23:'Bō',
+  24:'Fù', 25:'Wú Wàng', 26:'Dà Chù', 27:'Yí', 28:'Dà Guò', 29:'Kǎn', 30:'Lí',
+  31:'Xián', 32:'Héng', 33:'Dùn', 34:'Dà Zhuàng', 35:'Jìn', 36:'Míng Yí', 37:'Jiā Rén',
+  38:'Kuí', 39:'Jiǎn', 40:'Jiě', 41:'Sǔn', 42:'Yì', 43:'Guài', 44:'Gòu', 45:'Cuì',
+  46:'Shēng', 47:'Kùn', 48:'Jǐng', 49:'Gé', 50:'Dǐng', 51:'Zhèn', 52:'Gèn', 53:'Jiàn',
+  54:'Guī Mèi', 55:'Fēng', 56:'Lǚ', 57:'Xùn', 58:'Duì', 59:'Huàn', 60:'Jié',
+  61:'Zhōng Fú', 62:'Xiǎo Guò', 63:'Jì Jì', 64:'Wèi Jì'
+};
+
+const CORE_NAME_INFO = {
+  1:['prefix',1], 2:['prefix',1], 3:['suffix',1], 4:['suffix',1], 5:['suffix',1],
+  6:['suffix',1], 7:['suffix',1], 8:['suffix',1], 9:['suffix',2], 10:['suffix',1],
+  11:['suffix',1], 12:['suffix',1], 13:['suffix',2], 14:['suffix',2], 15:['suffix',1],
+  16:['suffix',1], 17:['suffix',1], 18:['suffix',1], 19:['suffix',1], 20:['suffix',1],
+  21:['suffix',2], 22:['suffix',1], 23:['suffix',1], 24:['suffix',1], 25:['suffix',2],
+  26:['suffix',2], 27:['suffix',1], 28:['suffix',2], 29:['prefix',1], 30:['prefix',1],
+  31:['suffix',1], 32:['suffix',1], 33:['suffix',1], 34:['suffix',2], 35:['suffix',1],
+  36:['suffix',2], 37:['suffix',2], 38:['suffix',1], 39:['suffix',1], 40:['suffix',1],
+  41:['suffix',1], 42:['suffix',1], 43:['suffix',1], 44:['suffix',1], 45:['suffix',1],
+  46:['suffix',1], 47:['suffix',1], 48:['suffix',1], 49:['suffix',1], 50:['suffix',1],
+  51:['prefix',1], 52:['prefix',1], 53:['suffix',1], 54:['suffix',2], 55:['suffix',1],
+  56:['suffix',1], 57:['prefix',1], 58:['prefix',1], 59:['suffix',1], 60:['suffix',1],
+  61:['suffix',2], 62:['suffix',2], 63:['suffix',2], 64:['suffix',2]
+};
+
+function coreName(hex){
+  const [pos, len] = CORE_NAME_INFO[hex.number];
+  return pos==='prefix' ? hex.name.slice(0,len) : hex.name.slice(hex.name.length-len);
+}
+
+const ENGLISH_NAMES = {
+  1:'The Creative', 2:'The Receptive', 3:'Difficulty at the Beginning', 4:'Youthful Folly',
+  5:'Waiting', 6:'Conflict', 7:'The Army', 8:'Holding Together', 9:'Small Taming',
+  10:'Treading', 11:'Peace', 12:'Standstill', 13:'Fellowship', 14:'Great Possession',
+  15:'Modesty', 16:'Enthusiasm', 17:'Following', 18:'Work on the Decayed', 19:'Approach',
+  20:'Contemplation', 21:'Biting Through', 22:'Grace', 23:'Splitting Apart', 24:'Return',
+  25:'Innocence', 26:'Great Taming', 27:'Nourishment', 28:'Great Preponderance',
+  29:'The Abysmal', 30:'The Clinging', 31:'Influence', 32:'Duration', 33:'Retreat',
+  34:'Great Power', 35:'Progress', 36:'Darkening of the Light', 37:'The Family',
+  38:'Opposition', 39:'Obstruction', 40:'Deliverance', 41:'Decrease', 42:'Increase',
+  43:'Breakthrough', 44:'Coming to Meet', 45:'Gathering Together', 46:'Pushing Upward',
+  47:'Oppression', 48:'The Well', 49:'Revolution', 50:'The Cauldron', 51:'The Arousing',
+  52:'Keeping Still', 53:'Development', 54:'The Marrying Maiden', 55:'Abundance',
+  56:'The Wanderer', 57:'The Gentle', 58:'The Joyous', 59:'Dispersion', 60:'Limitation',
+  61:'Inner Truth', 62:'Small Preponderance', 63:'After Completion', 64:'Before Completion'
+};
+
+const ENGLISH_GUACI = {
+  1:'Great success. Staying true to your course brings reward.',
+  2:"Supreme success, through the steady strength of a mare. Leading brings confusion; following finds the way. Friends gather in the southwest — you'll lose them in the northeast. Staying calm and true brings good fortune.",
+  3:"Great success, and reward for staying true. Don't rush ahead — better to lay foundations and appoint good help.",
+  4:"Success. It isn't I who seeks the inexperienced student — the student seeks me. A sincere first question deserves an answer; ask carelessly again and again, and you'll get none. Staying true brings reward.",
+  5:'With sincerity, there is shining success. Staying true brings good fortune. It favors crossing the great river.',
+  6:'Sincerity meets resistance. Caution brings good fortune partway, but pressing on to the end brings misfortune. It favors seeing a great person; it does not favor crossing the great river.',
+  7:'Staying true, with a seasoned leader in charge, brings good fortune and no blame.',
+  8:'Good fortune. Re-examine yourself as if consulting the oracle again — lasting truth and integrity bring no blame. Those still unsettled will come around; whoever arrives too late will meet misfortune.',
+  9:"Success — though for now it's only dense clouds, no rain yet, gathering from our western border.",
+  10:"Treading on a tiger's tail without being bitten — success through care and respect.",
+  11:'The small departs, the great arrives. Good fortune and success.',
+  12:"A time when things don't connect as they should. Not favorable for the noble one to persist as usual — the great departs, the small arrives.",
+  13:"Fellowship in the open country — success. It favors crossing the great river, and favors the noble one's steady course.",
+  14:'Supreme success.',
+  15:'Success. The noble one sees things through to a good end.',
+  16:'Favorable for establishing leaders and setting armies in motion.',
+  17:'Great success, and reward for staying true. No blame.',
+  18:'Great success. It favors crossing the great river. Weigh carefully what came before, and what follows after.',
+  19:'Great success, and reward for staying true — though by the eighth month, misfortune may come.',
+  20:"Like one who has washed their hands before the offering but hasn't yet presented it — sincerity and quiet dignity command reverence.",
+  21:'Success. It favors resolving disputes through clear judgment.',
+  22:'Success. Small gains from moving forward.',
+  23:'Not favorable to move forward in any direction.',
+  24:'Success. Coming and going bring no trouble; friends arrive without blame. The way turns back on itself — on the seventh day, return comes. Favorable to act.',
+  25:"Great success, and reward for staying true. But if your course isn't honest, misfortune follows — not favorable to move forward.",
+  26:'Reward for staying true. Good fortune in not living only for your own household — favors crossing the great river.',
+  27:'Staying true brings good fortune. Watch how you are nourished, and how you seek your own sustenance.',
+  28:'The ridgepole sags under the weight — an unusual time. Favorable to act; success follows.',
+  29:'Repeated danger. With sincerity, the heart still finds its way through — moving forward earns respect.',
+  30:'Reward for staying true; success. Like nurturing a gentle cow — good fortune.',
+  31:'Success, and reward for staying true. Good fortune in marrying a wife.',
+  32:'Success, no blame, reward for staying true. Favorable to act.',
+  33:'Success; small reward for staying true.',
+  34:'Reward for staying true.',
+  35:'Like a trusted lord granted many horses, received by the king three times in a single day — advancement and recognition.',
+  36:"Favorable to hold to what's right through hardship.",
+  37:"Favorable for the woman's constancy.",
+  38:'Good fortune in small matters.',
+  39:'Favorable toward the southwest, unfavorable toward the northeast. Favorable to see a great person; staying true brings good fortune.',
+  40:"Favorable toward the southwest. If there's nowhere pressing to go, returning brings good fortune; if there is somewhere to go, going quickly brings good fortune.",
+  41:"With sincerity, great good fortune, no blame. This can be held to steadily, and it's favorable to act. Even a simple offering — two bowls of grain — will be accepted.",
+  42:'Favorable to act; favors crossing the great river.',
+  43:"Announce it openly in the royal court — sincerity calls out even amid danger. Warn your own city first; force isn't the answer, but moving forward is.",
+  44:'A woman who is too forceful — not wise to marry her.',
+  45:'Success. The king approaches the ancestral temple. Favorable to see a great person — success, and reward for staying true. A generous offering brings good fortune; favorable to act.',
+  46:'Great success. Seek out a great person — no need to worry. Advancing southward brings good fortune.',
+  47:'Success is still possible through staying true. The great person finds good fortune, no blame — though words alone may not be believed.',
+  48:"A town may be relocated, but its well cannot. It neither runs dry nor overflows, and everyone comes and goes to draw from it. But if you arrive and the rope doesn't reach — or the jar breaks — that is misfortune.",
+  49:'Trust builds once the moment has truly arrived. Great success, and reward for staying true — regret disappears.',
+  50:'Great good fortune and success.',
+  51:"Success. When the shock comes, there's trembling caution, then laughter and easy talk again. The shock rattles for a hundred miles, yet the one holding the ladle doesn't spill a drop.",
+  52:"Stillness like resting the back — no longer aware of the self. Walking through the courtyard without noticing who's there. No blame.",
+  53:"Good fortune in a woman's marriage — through patient, steady progress.",
+  54:'Acting rashly brings misfortune — nothing to be gained.',
+  55:'Success. The king arrives at this fullness — no need to worry. Best to act like the sun at its height.',
+  56:'Small success. For the traveler, staying true brings good fortune.',
+  57:'Small success. Favorable to act, favorable to see a great person.',
+  58:'Success, and reward for staying true.',
+  59:'Success. The king arrives at the ancestral temple. Favorable to cross the great river; favors staying true.',
+  60:"Success — but limits pushed too far can't hold.",
+  61:'Good fortune reaching even pigs and fish. Favors crossing the great river; favors staying true.',
+  62:"Success, and reward for staying true. Right for small matters, not great ones. Like a bird's cry trailing behind as it flies — better to descend than climb. Great good fortune.",
+  63:"Small success; reward for staying true. Good fortune at the start, but disorder may follow if care isn't kept.",
+  64:"Success — yet like a young fox that's almost crossed the river, only to soak its tail at the very end. Nothing gained without care to the last step."
+};
+
+const ENGLISH_YAO = {
+  1: {
+    yao: [
+      'A dragon still hidden in the deep. Not yet the time to act.',
+      'A dragon appears in the field. It favors meeting a great person.',
+      'The noble one stays active and alert all day, cautious even into the evening. Danger is near, but no blame follows.',
+      'Poised as if to leap, still over the depths. No blame.',
+      'A dragon takes flight across the sky. It favors meeting a great person.',
+      'A dragon that has flown too high. There will be regret.'
+    ],
+    yong: 'A host of dragons, none seeking to lead — good fortune.'
+  },
+  2: {
+    yao: [
+      'Treading on frost — the hard ice is not far behind.',
+      'Straight, square, and vast — even without special effort, nothing is unfavorable.',
+      "Holding fine qualities in reserve while staying true. If called to serve, don't claim the credit — just see it through.",
+      'A sealed sack — no blame, but no praise either.',
+      'A yellow robe — great good fortune.',
+      'Dragons battle in the wild field, their blood dark and yellow.'
+    ],
+    yong: 'Favorable to remain true, over the long run.'
+  },
+  3: {
+    yao: [
+      'Circling in place, unable to advance. Favorable to stay put and stay true; favorable to appoint good help.',
+      "Difficulty, hesitation — riders circling on their horses. Not bandits, but suitors. The woman holds back, true to herself, and doesn't marry — not until ten years have passed.",
+      'Chasing a deer without a guide, only to be lost in the forest. The wise one senses this and lets it go — pressing on invites regret.',
+      'Riders circling — this time seeking marriage. Moving forward brings good fortune; nothing unfavorable.',
+      'Held back even in abundance. Staying true in small things brings good fortune; in large things, misfortune.',
+      'Riders circling endlessly, weeping tears of blood.'
+    ]
+  },
+  4: {
+    yao: [
+      "Opening up what's clouded. It helps to set clear boundaries, then remove the restraints — but keep enforcing them, and regret follows.",
+      'Embracing the inexperienced with patience — good fortune. Taking a wife brings good fortune; a son capable of carrying the family.',
+      "Don't take this woman in marriage — she loses herself at the sight of wealth. Nothing to be gained.",
+      'Bound up in confusion, cut off from help. Regret.',
+      'A young student, open and willing. Good fortune.',
+      'Striking hard against confusion — not to attack, but to defend. Unfavorable to become the aggressor; favorable to guard against one.'
+    ]
+  },
+  5: {
+    yao: [
+      'Waiting at the edge of things. Favorable to hold steady. No blame.',
+      'Waiting on the sandbank. Some minor criticism, but it ends well.',
+      'Waiting in the mud — this invites trouble.',
+      'Waiting in a place of danger. Find your way out of the pit.',
+      'Waiting amid food and drink — staying true brings good fortune.',
+      'Entering the cave, three uninvited guests arrive. Treat them with respect, and it ends well.'
+    ]
+  },
+  6: {
+    yao: [
+      "Don't let the dispute drag on — some minor talk, but it ends well.",
+      'Unable to win the dispute — retreat home to a small community of three hundred households. No disaster follows.',
+      "Living on old merit — staying true through danger brings a good end. If called to serve, don't seek the credit.",
+      "Unable to win the dispute — return to what's right, settle into peace and truth. Good fortune.",
+      'The dispute itself — great good fortune.',
+      'Even if honored with a ceremonial belt, it may be stripped away three times before the morning ends.'
+    ]
+  },
+  7: {
+    yao: [
+      'The army marches out under discipline. Without it, misfortune, however good the cause.',
+      'At the center of the army — good fortune, no blame. The king bestows honor three times over.',
+      'The army may carry back its dead in carts. Misfortune.',
+      'The army withdraws to safer ground. No blame.',
+      'Game in the field — favorable to take clear action, no blame. Let the experienced one lead the army; if the inexperienced one takes charge, even with good intentions, misfortune follows.',
+      'The great ruler gives the order — founding states, passing down households. Do not employ the small-minded.'
+    ]
+  },
+  8: {
+    yao: [
+      'Union built on sincerity — no blame. Let that sincerity fill you completely, like a full vessel, and in the end, unexpected good comes.',
+      'Union that grows from within — staying true brings good fortune.',
+      'Union with the wrong people.',
+      'Union reaching outward — staying true brings good fortune.',
+      "Union made visible — like a king's hunt on three sides, letting the game escape ahead, and his own people needn't be warned. Good fortune.",
+      'Union without a true center — misfortune.'
+    ]
+  },
+  9: {
+    yao: [
+      'Returning to the right path — what fault could there be? Good fortune.',
+      "Pulled back by another's example — good fortune.",
+      'The cart loses its wheel-spokes; husband and wife turn against each other.',
+      'With sincerity, the danger passes and the fear lifts. No blame.',
+      'Sincerity that binds people together — sharing wealth with one\'s neighbors.',
+      'The rain has fallen, the tension has settled — virtue has finally taken hold. But a woman clinging to this, however true, courts danger, like the moon almost full. If the noble one presses forward now, misfortune follows.'
+    ]
+  },
+  10: {
+    yao: [
+      'Walking plainly, without pretension. Moving forward brings no blame.',
+      'Treading a smooth, easy path — good fortune for the quiet, solitary one who stays true.',
+      'One-eyed, thinking he can see clearly; lame, thinking he can walk well — treading on the tiger\'s tail and getting bitten. Misfortune. Like a mere soldier trying to act as a great ruler.',
+      "Treading on the tiger's tail, full of careful fear — it ends well.",
+      'Treading with total resolve — even staying true, there is danger.',
+      'Looking back over the whole path walked, and reading what it foretells — if it is complete and unbroken, great good fortune.'
+    ]
+  },
+  11: {
+    yao: [
+      'Pulling up grass and finding it tangled with its roots — others come along too. Moving forward brings good fortune.',
+      "Embracing what's uncultivated, willing to wade the river without a boat, not neglecting the distant, and free of favoritism — this earns a place on the middle path.",
+      "No plain lasts without a slope, no going without a return. Hold to what's difficult and true, and there's no blame. Don't worry over whether you're believed — there is blessing enough in what sustains you.",
+      "Fluttering down lightly, not relying on personal wealth but on one's neighbors — sincerity needs no warning.",
+      'Like the marriage arranged by a great ruler for his sister — through this, blessing and great good fortune.',
+      "The city wall crumbles back into the moat. Don't send the army now — announce it within your own town instead. Even staying true, there is regret."
+    ]
+  },
+  12: {
+    yao: [
+      'Pulling up grass tangled with its roots, others come along too. Staying true brings good fortune and success.',
+      'Bearing with what comes, going along quietly — good fortune for the small-minded, but the great person keeps their distance. Success.',
+      'Bearing shame in silence.',
+      'Acting under a clear mandate brings no blame, and others share in the blessing.',
+      "Bringing the standstill to rest — good fortune for the great person. 'It could fail, it could fail' — so stay tied fast, like roots to a mulberry clump.",
+      'The standstill finally overturns. First comes stagnation, then joy.'
+    ]
+  },
+  13: {
+    yao: [
+      'Fellowship right at the gate — no blame.',
+      'Fellowship limited to your own clan — regret.',
+      'Hiding soldiers in the underbrush, climbing the high ridge to watch — but for three years, nothing moves.',
+      'Mounting the wall, but not attacking — good fortune.',
+      'Fellowship — first crying out in anguish, then laughing. After a great struggle, the two finally meet.',
+      'Fellowship out at the edge of things — no regret.'
+    ]
+  },
+  14: {
+    yao: [
+      'No dealings that bring harm — not yet a fault, but stay mindful of the difficulty, and there is no blame.',
+      "A great cart, well loaded — there's somewhere to go, and no blame.",
+      'A duke makes his offering to the Son of Heaven — something the small-minded could never manage.',
+      'Not flaunting the abundance — no blame.',
+      'Sincerity that connects with others, carried with quiet authority — good fortune.',
+      'Blessed from above — good fortune, nothing unfavorable.'
+    ]
+  },
+  15: {
+    yao: [
+      'The truly modest noble one — fit even to cross the great river. Good fortune.',
+      'Modesty that speaks for itself — staying true brings good fortune.',
+      'Modesty earned through hard work — the noble one sees it through. Good fortune.',
+      'Nothing unfavorable — modesty expressed freely, in every direction.',
+      "Not relying on personal wealth, but on one's neighbors — favorable even to take firm action. Nothing unfavorable.",
+      "Modesty that speaks for itself — favorable even to lead an army to set one's own house in order."
+    ]
+  },
+  16: {
+    yao: [
+      'Enthusiasm announced too loudly — misfortune.',
+      "Firm as a rock, sensing the moment before it's even over — staying true brings good fortune.",
+      'Looking up at others for enthusiasm — regret. Hesitate, and the regret only grows.',
+      "The source of the enthusiasm itself — great gain follows. Don't doubt it — friends will gather close, like hairpins bound together.",
+      'Chronically troubled, staying true — but enduring, not fading away.',
+      'Enthusiasm gone dark and set in habit — but if you change course even now, no blame.'
+    ]
+  },
+  17: {
+    yao: [
+      'A change in leadership — staying true brings good fortune. Going out and connecting with others brings success.',
+      'Clinging to the young and inexperienced, losing the mature and capable.',
+      'Clinging to the mature and capable, letting go of the young — following this path gets you what you seek. Favorable to stay put and stay true.',
+      'Gaining followers of your own — even staying true, this brings danger. But hold to sincerity and stay on the path, act with clarity, and what fault could there be?',
+      'Sincerity devoted to what is excellent — good fortune.',
+      'Held fast, bound close, and following willingly — like the king making his offering at the western mountain.'
+    ]
+  },
+  18: {
+    yao: [
+      'Repairing the damage left by a father — a capable child means no blame reaches him. Danger at first, but it ends well.',
+      'Repairing the damage left by a mother — don\'t press too hard or too rigidly.',
+      'Repairing the damage left by a father — some small regret, but no serious blame.',
+      'Letting the damage from a father go unaddressed — moving forward this way brings regret.',
+      'Repairing the damage left by a father — and earning praise for it.',
+      'Not serving king or lord, but holding to a higher purpose of one\'s own.'
+    ]
+  },
+  19: {
+    yao: [
+      'Approaching together, in mutual response — staying true brings good fortune.',
+      'Approaching together — good fortune, nothing unfavorable.',
+      'Approaching with empty flattery — nothing to be gained. But once you recognize the problem, no blame.',
+      'Approaching fully, wholeheartedly — no blame.',
+      'Approaching with wisdom — fitting for a great leader. Good fortune.',
+      'Approaching with warmth and generosity — good fortune, no blame.'
+    ]
+  },
+  20: {
+    yao: [
+      "Looking at things with a child's narrow view — no blame for the small-minded, but regret for the noble one.",
+      "Peering through a crack — favorable only for a woman's constancy.",
+      'Watching one\'s own life closely, to decide whether to advance or hold back.',
+      'Witnessing the glory of the kingdom — favorable to serve as a guest of the king.',
+      "Watching one's own life closely — for the noble one, no blame.",
+      "Watching how one's own life unfolds — for the noble one, no blame."
+    ]
+  },
+  21: {
+    yao: [
+      'Wearing stocks that cover the toes — no blame.',
+      'Biting through soft flesh, deep enough to graze the nose — no blame.',
+      'Biting into dried, tough meat, and hitting something sour — a small setback, but no blame.',
+      'Biting through meat still on the bone, finding a bronze arrowhead inside — favorable to hold firm through difficulty. Good fortune.',
+      'Biting through dried meat, finding gold — stay true despite the danger, and there is no blame.',
+      'Wearing a cangue heavy enough to cover the ears — misfortune.'
+    ]
+  },
+  22: {
+    yao: [
+      'Adorning the feet — choosing to walk rather than ride.',
+      'Adorning the beard.',
+      'Adorned and glowing, as if freshly touched with dew — lasting truth brings good fortune.',
+      'Adorned, yet plain as if in white, riding a pale horse swift as wings — not a raider, but a suitor.',
+      "Adornment found in a modest garden on the hill — a small bundle of silk seems humble, but it ends well.",
+      'Adornment stripped back to plain white — no blame.'
+    ]
+  },
+  23: {
+    yao: [
+      "The bed splitting apart at its legs — disregarding what's true brings misfortune.",
+      "The bed splitting apart at its frame — disregarding what's true brings misfortune.",
+      'Caught up in the splitting apart — yet no blame.',
+      'The bed splitting apart right to the surface — misfortune.',
+      'Like fish strung together, led in with the favor shown to those closest to the palace — nothing unfavorable.',
+      'A large fruit left uneaten. The noble one is carried onward like a cart; the small-minded tear down their own house.'
+    ]
+  },
+  24: {
+    yao: [
+      'Returning before going too far astray — no deep regret. Great good fortune.',
+      'A gracious, unhurried return — good fortune.',
+      'Returning again and again — danger, but no blame.',
+      'Walking the middle path, returning alone.',
+      'A generous, wholehearted return — no regret.',
+      'Lost, unable to find the way back — misfortune, with disaster following. Send an army under these conditions, and it ends in crushing defeat, harming even the ruler of the state — for ten years, no campaign will succeed.'
+    ]
+  },
+  25: {
+    yao: [
+      'Free of pretense — moving forward brings good fortune.',
+      'Reaping without having ploughed, harvesting fields not yet cleared — under these honest conditions, it favors moving forward.',
+      'Misfortune striking even the innocent — like an ox tied up that a passerby leads away, while the local people bear the blame for it.',
+      'This can be held to steadily — no blame.',
+      "An illness striking even the innocent — don't rush to treat it, and there will be cause for joy.",
+      'Innocent, yet action here brings trouble — nothing to be gained by moving forward.'
+    ]
+  },
+  26: {
+    yao: [
+      'Danger present — better to stop.',
+      'The cart loses its axle-strap.',
+      'Good horses in pursuit — favorable to hold firm through difficulty. Practice daily the skills of driving and defense, and it favors moving forward.',
+      'A young bull with a guard fitted early over its horns — great good fortune.',
+      'A boar gelded, its wild tusks now harmless — good fortune.',
+      'Open as the very roads of heaven — success.'
+    ]
+  },
+  27: {
+    yao: [
+      'Setting aside your own sound judgment to watch my jaw work enviously — misfortune.',
+      'Seeking nourishment upside down, going against the natural order to climb the hill for it — pressing on this way brings misfortune.',
+      "Nourishment gone against its own nature — staying true here still means misfortune. Ten years pass without it being of any use — nothing to be gained.",
+      'Seeking nourishment upside down, yet here it brings good fortune — like a tiger watching closely, hungry and intent, but this brings no blame.',
+      'Going against the usual order — staying put and staying true brings good fortune, but this is no time to cross the great river.',
+      'The very source of nourishment itself — danger, yet good fortune, and it favors crossing the great river.'
+    ]
+  },
+  28: {
+    yao: [
+      'Laying down soft white reeds as a cushion beneath something — no blame.',
+      'A withered willow sprouting new shoots; an old man taking a young wife — nothing unfavorable.',
+      'The ridgepole sags dangerously — misfortune.',
+      'The ridgepole rises strong and true — good fortune, though other complications bring regret.',
+      'A withered willow bursting into flower; an old woman taking a young husband — no blame, but no praise either.',
+      'Wading in over one\'s head, in over the crown — misfortune, yet no one is to blame.'
+    ]
+  },
+  29: {
+    yao: [
+      'Danger upon danger — falling into the pit within the pit. Misfortune.',
+      'In the midst of danger — seek only small gains for now.',
+      'Coming and going, danger after danger, resting uneasily on the edge of risk — falling deeper into the pit. Best not to act.',
+      'A simple jug of wine, two bowls of grain, served in plain earthenware, offered humbly through the window — in the end, no blame.',
+      'The pit not yet filled to the brim, but the ground is beginning to level — no blame.',
+      'Bound with cords, placed among thorny brambles — three years pass without release. Misfortune.'
+    ]
+  },
+  30: {
+    yao: [
+      'Treading carefully amid confusion — meeting it with respect brings no blame.',
+      'Clinging like a golden light — great good fortune.',
+      "Clinging like the sun in its decline — if you don't sing and mark the moment, you'll only groan like the very old. Misfortune.",
+      'Coming on so suddenly — like a fire, like death, like something cast aside.',
+      'Tears streaming, grieving deeply — yet good fortune follows.',
+      'The king marches out to correct what\'s wrong, striking cleanly at the source, sparing the followers who meant no real harm — no blame.'
+    ]
+  },
+  31: {
+    yao: [
+      'The influence felt first in the big toe.',
+      'The influence reaching the calf — misfortune if acted on. Staying still brings good fortune.',
+      'The influence reaching the thigh, clinging to whoever it follows — moving forward this way brings regret.',
+      'Staying true brings good fortune, and regret fades. But going back and forth restlessly, only those who share your narrow thinking will follow.',
+      'The influence reaching the back, above the heart — no regret.',
+      'The influence reaching the jaw, cheeks, and tongue — mere talk.'
+    ]
+  },
+  32: {
+    yao: [
+      'Seeking depth and permanence too soon — even staying true brings misfortune. Nothing to be gained.',
+      'Regret fades away.',
+      "Failing to hold steady to one's own character — shame may follow. Even staying true, there is regret.",
+      'A field with no game in it.',
+      'Holding steady to one\'s character, staying true — good fortune for a woman in this, but misfortune for a man.',
+      'Restless, unable to hold steady — misfortune.'
+    ]
+  },
+  33: {
+    yao: [
+      'Retreating too late, like the tail left behind — danger. Best not to go anywhere right now.',
+      'Held fast, as if bound with the hide of a yellow ox — nothing can loosen it.',
+      'Retreating, yet still tied down — distress and danger follow. But caring well for those depending on you brings good fortune.',
+      "Retreating gracefully, by choice — good fortune for the noble one, but not for the small-minded, who can't manage it.",
+      'A retreat handled with real skill — staying true brings good fortune.',
+      'Retreating fully, without a trace of regret — nothing unfavorable.'
+    ]
+  },
+  34: {
+    yao: [
+      'Strength surging in the toes — pushing forward brings misfortune, though the sincerity behind it is real.',
+      'Staying true brings good fortune.',
+      'The small-minded rely on raw strength; the noble one restrains it. Even staying true, there is danger — like a ram charging a fence and getting its horns caught.',
+      "Staying true brings good fortune, and regret fades. The fence gives way, the horns come free — like the strength held firmly in a great cart's axle.",
+      "Losing the ram's aggression with ease — no regret.",
+      'A ram charging a fence, unable to back away or push through — nothing to be gained. Only by facing the difficulty honestly does good fortune come.'
+    ]
+  },
+  35: {
+    yao: [
+      'Advancing, then held back — staying true brings good fortune. Even without full trust yet, staying generous and patient brings no blame.',
+      "Advancing, yet anxious — staying true brings good fortune. This great blessing comes, as if from a grandmother's care.",
+      'Trusted by everyone around — regret fades.',
+      'Advancing like a cautious rodent, darting and unsure — even staying true, there is danger.',
+      "Regret fades — don't worry over gains and losses. Moving forward brings good fortune, nothing unfavorable.",
+      "Advancing to the very horn, using this strength only to set one's own house in order — danger, yet good fortune, and no blame. Though staying true this way still carries some regret."
+    ]
+  },
+  36: {
+    yao: [
+      'The light darkening as if a bird in flight, wings drooping low. The noble one, journeying on, goes three days without eating. There is somewhere to go, though others will have words about it.',
+      'The light darkening, wounded in the left thigh — saved by the strength of a good horse. Good fortune.',
+      "The light darkening during a hunt in the south, where the great source of the trouble is finally found — but don't rush to set everything right at once.",
+      'Entering deep into the danger, right to its very heart, yet finding the way to step back out through the gate.',
+      'Like the wise minister who hid his brilliance through the darkest time and endured — favorable to stay true.',
+      'No light at all now, only darkness. What once rose high into the sky has fallen back into the earth.'
+    ]
+  },
+  37: {
+    yao: [
+      'Setting clear boundaries within the household, right from the start — regret fades.',
+      'Not seeking anything for herself, tending faithfully to the home — staying true brings good fortune.',
+      'A household run with real firmness — some regret and difficulty, but good fortune follows. Left too relaxed, laughing without discipline, it ends in regret.',
+      'A household grown prosperous — great good fortune.',
+      "Like a king's care extending into his own household — no need to worry. Good fortune.",
+      'Sincerity carried with quiet authority — in the end, good fortune.'
+    ]
+  },
+  38: {
+    yao: [
+      "Regret fades. A horse is lost — don't chase it, it returns on its own. Even meeting someone difficult brings no blame.",
+      'Meeting the one you seek, by chance, down a side street — no blame.',
+      'Seeing a cart dragged back, its ox held fast, its driver marked and humiliated — a bad start, but a good end.',
+      'Isolated by the division, until meeting someone genuinely trustworthy — sincerity exchanged. Danger, but no blame.',
+      'Regret fades. Reconciling with one\'s own kind, as easily as biting through soft flesh — moving forward now, what fault could there be?',
+      "Isolated by the division, seeing what looks like a filthy pig, or a cart full of ghosts. Bow drawn at first in fear, then lowered — it isn't an attacker, only someone come courting. Moving forward into the rain that follows brings good fortune."
+    ]
+  },
+  39: {
+    yao: [
+      'Going forward meets obstruction; turning back earns respect.',
+      "The king's minister meets obstruction after obstruction, not for any fault of his own.",
+      'Going forward meets obstruction; better to turn back.',
+      'Going forward meets obstruction; turning back, one finds allies.',
+      'Great obstruction — yet friends arrive to help.',
+      'Going forward meets obstruction; turning back brings real reward. Good fortune, and favorable to see a great person.'
+    ]
+  },
+  40: {
+    yao: [
+      'No blame.',
+      'In the hunt, catching three foxes and finding a bronze arrow — staying true brings good fortune.',
+      'Carrying a burden while riding in a carriage — this invites trouble. Even staying true, there is regret.',
+      'Freeing yourself, even from your own toes — sincere friends arrive once this is done.',
+      'The noble one alone can bring real deliverance — good fortune, and even the small-minded come to trust it.',
+      'Like a duke shooting down a hawk perched on a high wall, and hitting the mark — nothing unfavorable.'
+    ]
+  },
+  41: {
+    yao: [
+      'Set aside your own business and go quickly to help — no blame, though think carefully about how much you give.',
+      'Favorable to stay true; pushing forward brings misfortune. Give without diminishing yourself.',
+      'Three walking together lose one along the way; one walking alone finds a friend.',
+      'Easing an affliction by acting quickly — this brings joy. No blame.',
+      'Blessed with something priceless, like ten pairs of sacred tortoise shells, impossible to refuse — great good fortune.',
+      'Giving without diminishing yourself, no blame. Staying true brings good fortune; favorable to move forward. You gain support so devoted it asks nothing in return.'
+    ]
+  },
+  42: {
+    yao: [
+      'Favorable to undertake something significant — great good fortune, no blame.',
+      "Blessed with something priceless, like ten pairs of sacred tortoise shells, impossible to refuse — lasting truth brings good fortune. Even the king's offering to heaven finds favor here.",
+      'Increase that comes through hardship — no blame, if met with sincerity and a steady, balanced course. Report it openly, as if presenting a ceremonial token to a leader.',
+      'Walking the middle path, reporting honestly, and being heeded — favorable even to something as major as relocating the capital.',
+      'A sincere heart, generous by nature — no need to even ask, great good fortune follows. Others come to trust and appreciate that same generosity in you.',
+      "No one adds to your increase now — some may even strike against you. A heart that won't hold steady invites misfortune."
+    ]
+  },
+  43: {
+    yao: [
+      'Strength surging ahead in the toes — pushing forward without the means to win only brings fault.',
+      "Crying out in vigilant caution — even if trouble comes in the dead of night, there's no need to worry.",
+      'Strength showing plainly on the face — this invites misfortune. The noble one, resolute and decisive, walks alone and meets the rain; getting soaked may bring irritation, but no blame.',
+      'Raw and uncomfortable, walking with difficulty — like being led along as easily as a sheep, and regret fades. But hearing this advice, most won\'t believe it.',
+      "Cutting decisively through what's soft and overgrown — walking the middle path brings no blame.",
+      'No one left to cry out to — in the end, misfortune.'
+    ]
+  },
+  44: {
+    yao: [
+      'Held fast to a metal brake, staying true brings good fortune. Moving forward now invites trouble — like a lean, restless pig pacing and pawing the ground.',
+      'A wrapped fish in hand — no blame, though not favorable to share it with guests.',
+      'Raw and uncomfortable, walking with difficulty — danger, though no serious blame.',
+      'The wrapped bundle turns out empty, no fish inside — trouble stirs.',
+      'Like a melon wrapped carefully in willow leaves, holding its fine qualities within — a gift falls, as if from heaven itself.',
+      'Meeting at the very horn — regret, though no real blame.'
+    ]
+  },
+  45: {
+    yao: [
+      "Sincerity that doesn't quite hold — confusion, then a coming together anyway. Cry out for help, and what was scattered gathers into laughter. No need to worry — moving forward brings no blame.",
+      'Drawn together gently — good fortune, no blame. With real sincerity, even the simplest offering is enough.',
+      'Gathering together, yet sighing — nothing much to be gained. Moving forward brings no blame, though some small regret remains.',
+      'Great good fortune, no blame.',
+      "Gathering together around a position of real standing — no blame. If trust isn't yet complete, hold to what's lasting and true, and regret fades.",
+      'Sighing, weeping — yet no blame.'
+    ]
+  },
+  46: {
+    yao: [
+      'Rising with the full trust of others — great good fortune.',
+      'With real sincerity, even the simplest offering is enough — no blame.',
+      'Rising into what feels like an empty town — open ground ahead.',
+      'Like the king making his offering at Mount Qi — good fortune, no blame.',
+      'Staying true brings good fortune — rising step by step, as up a staircase.',
+      'Rising blindly, without seeing where it leads — favorable only if matched by ceaseless, honest effort.'
+    ]
+  },
+  47: {
+    yao: [
+      'Sitting uncomfortably against the stump of a tree, driven into a dark valley — three years pass without any way out in sight.',
+      'Oppressed even amid wine and food — yet honor arrives soon after. Favorable to approach this with the sincerity of an offering. Pushing forward brings misfortune, though no real blame.',
+      'Oppressed by a hard, unyielding obstacle, caught among thorns — returning home only to find no one there. Misfortune.',
+      'Coming slowly, held back as if by a heavy carriage — regret, but it reaches a good end.',
+      'Oppressed and wounded, held back even amid honor — but relief comes gradually. Favorable to approach this with real sincerity.',
+      'Oppressed, tangled up like vines, uneasy and unsteady — regretting every move made so far. But once that regret is faced honestly, moving forward brings good fortune.'
+    ]
+  },
+  48: {
+    yao: [
+      'A well too muddy to draw from — an old well that no creatures visit anymore.',
+      'A well leaking out through a crack, feeding only small fish in the shallows — the jar itself is cracked.',
+      'A well cleared and fit to drink from, yet no one draws from it — a real sadness. It could nourish so many — if only those in charge saw clearly, everyone would share in the benefit.',
+      'A well properly lined and maintained — no blame.',
+      'A well clear and cold, its spring water good to drink.',
+      'The well finally drawn from freely, its cover removed for all — real sincerity here. Great good fortune.'
+    ]
+  },
+  49: {
+    yao: [
+      'Bound fast, as if with the hide of a yellow ox — not yet time to move.',
+      'Once the moment has truly come, real change follows — moving forward brings good fortune, no blame.',
+      'Pushing forward now brings misfortune; even staying true carries danger. But once the case for change has been made and confirmed three times over, sincerity carries it through.',
+      'Regret fades. With real sincerity behind it, even changing what seemed fixed brings good fortune.',
+      'The great person transforms as boldly as a tiger changing its stripes — trusted even before any confirmation is needed.',
+      'The noble one transforms as subtly as a leopard changing its spots; the small-minded merely change their expression. Pushing forward now brings misfortune — better to stay settled and true.'
+    ]
+  },
+  50: {
+    yao: [
+      "The cauldron tipped over on its legs — favorable, actually, for clearing out what didn't belong. Like gaining a concubine for the sake of her son — no blame.",
+      "The cauldron full and ready — even if a rival is troubled by it, they can't reach or touch what's yours. Good fortune.",
+      "The cauldron's handles altered, its progress blocked — the rich meat inside goes untasted. But the coming rain eases the regret, and it ends well.",
+      "The cauldron's legs snap, spilling the ruler's meal, staining everything — misfortune.",
+      'The cauldron fitted with golden handles and rings — favorable to stay true.',
+      'The cauldron crowned with handles of jade — great good fortune, nothing unfavorable.'
+    ]
+  },
+  51: {
+    yao: [
+      'The shock arrives, startling and sharp — then laughter and easy talk follow. Good fortune.',
+      "The shock arrives with real danger — a fortune seemingly lost, like climbing to the highest ridge to escape it. Don't chase after what's gone; within seven days, it returns.",
+      'The shock leaves you shaken, uneasy — but moving forward through it brings no real harm.',
+      'The shock sinks you down into the mud.',
+      "The shock comes and goes, danger throughout — yet nothing essential is truly lost. There's real work to be done.",
+      "The shock leaves you trembling, glancing anxiously around — pushing forward now brings misfortune. But if the shock strikes your neighbor and not you directly, there's no blame — though there may be talk, even among close relations."
+    ]
+  },
+  52: {
+    yao: [
+      'Stillness starting at the toes — no blame. Favorable to hold to this steadily.',
+      'Stillness held at the calf, unable to help the one it should follow — the heart stays unsettled.',
+      'Stillness forced at the waist, straining the muscles along the spine — danger that burns right through the heart.',
+      'Stillness held throughout the whole body — no blame.',
+      'Stillness held even in the jaw — words come out in proper order, and regret fades.',
+      'Stillness held with real depth and sincerity — good fortune.'
+    ]
+  },
+  53: {
+    yao: [
+      'Wild geese advancing gradually toward the shore — a young, inexperienced one faces some danger, and there is talk, but no real blame.',
+      'Wild geese advancing to the flat rocks, eating and drinking at ease — good fortune.',
+      'Wild geese advancing onto dry land — like a husband who marches off and never returns, or a wife who conceives but cannot raise the child. Misfortune, though favorable for defending against attack.',
+      'Wild geese advancing to the trees — finding, perhaps, a flat enough branch to rest on. No blame.',
+      'Wild geese advancing to the high ridge — like a wife who goes three years without conceiving, yet in the end, nothing can stand in the way. Good fortune.',
+      'Wild geese advancing even higher, to the heights beyond — their feathers fit now to grace a ceremony. Good fortune.'
+    ]
+  },
+  54: {
+    yao: [
+      'Marrying off the younger sister in a supporting role — like someone lame who still manages to walk. Moving forward brings good fortune.',
+      'One-eyed, yet still able to see — favorable for the quiet, solitary one who stays true.',
+      'Marrying off the sister only after some delay — she returns instead to a supporting role.',
+      'The marriage delayed past its expected time — but the right time for it will still come.',
+      "Like the great ruler's own sister given in marriage, whose formal robes were plainer than her attendant's — like the moon nearly full. Good fortune.",
+      'A woman holding a basket with nothing in it; a man cutting a sheep that yields no blood — nothing to be gained.'
+    ]
+  },
+  55: {
+    yao: [
+      'Meeting the one who truly matches you — even ten days together bring no blame, and moving forward earns real respect.',
+      'Abundance so dense it blocks the light, like seeing stars at noon — moving forward now only breeds suspicion. But if sincerity is expressed openly, good fortune follows.',
+      'Abundance so dense it darkens everything, like faint stars seen at noon — even an injury to the right arm brings no blame.',
+      'Abundance so dense it blocks the light, like stars at noon — yet meeting someone who truly understands brings good fortune.',
+      'Bringing real brilliance to the moment — praise and celebration follow. Good fortune.',
+      'A house grown so large it darkens itself, its own family hidden away inside — peering through the door, no one is there. Three years pass without anyone seen. Misfortune.'
+    ]
+  },
+  56: {
+    yao: [
+      'The wanderer caught up in petty, small-minded concerns — this is exactly how trouble finds him.',
+      'The wanderer settled into lodging, resources in hand, gaining the loyalty of a capable young helper.',
+      "The wanderer's lodging burns down, and the loyal helper is lost — even staying true, there is danger.",
+      'The wanderer finds a place to stay and the means to get by, yet the heart remains unsettled.',
+      'Shooting a pheasant and losing the arrow in the process — yet it ends in honor and recognition.',
+      "A bird's nest burns down. The wanderer laughs at first, then cries out in grief — an ox lost too easily. Misfortune."
+    ]
+  },
+  57: {
+    yao: [
+      "Advancing, then retreating, uncertain — favorable for the discipline of someone with real resolve.",
+      'Gentle influence working quietly beneath the surface, like priests and diviners working through confusion — good fortune, no blame.',
+      'Yielding again and again, without real conviction — regret.',
+      'Regret fades — the hunt yields threefold gain.',
+      'Staying true brings good fortune, regret fades, nothing unfavorable. No good start, perhaps, but a good end — weigh carefully what leads up to the change, and what follows after. Good fortune.',
+      'Gentle influence pushed too far beneath the surface, losing even the means to act — even staying true, this brings misfortune.'
+    ]
+  },
+  58: {
+    yao: [
+      'Joy rooted in harmony — good fortune.',
+      'Joy rooted in sincerity — good fortune, and regret fades.',
+      'Joy sought from outside, chased after — misfortune.',
+      'Weighing where real joy lies, unsettled — resisting the temptation firmly brings its own cause for happiness.',
+      "Trusting too readily in what's already deteriorating — danger.",
+      'Joy drawn out, extended further and further.'
+    ]
+  },
+  59: {
+    yao: [
+      'Using the strength of a good horse to help — good fortune.',
+      'In the midst of dispersal, rushing to something stable to lean on — regret fades.',
+      'Setting aside concern for oneself amid the dispersal — no regret.',
+      'Dispersing old factions and divisions — great good fortune. What gathers back together, like a rising mound, goes beyond what anyone expected.',
+      "Dispersing doubt with a clear, decisive call, as urgent as a fever breaking — even the king's own position shifts for the better. No blame.",
+      'Dispersing even old wounds, moving them far away and letting them go — no blame.'
+    ]
+  },
+  60: {
+    yao: [
+      'Not stepping out beyond the courtyard door — no blame.',
+      'Not stepping out even past the gate — this time, misfortune.',
+      'Failing to observe any limits at all leads to real regret — though ultimately, no one else is to blame.',
+      'Limitation embraced naturally and at ease — success.',
+      'Limitation that feels sweet, not forced — good fortune, and moving forward earns real respect.',
+      'Limitation pushed to a bitter extreme — even staying true, this brings misfortune, though the regret eventually fades.'
+    ]
+  },
+  61: {
+    yao: [
+      'Resting in quiet trust — good fortune. Seeking anything else brings no peace.',
+      "A crane calling from the shade, her young answering in turn — 'I have a fine cup of wine; let me share it with you.'",
+      "Meeting one's match — now beating the drum, now stopping; now weeping, now singing.",
+      "Like the moon nearly full; like a horse's partner suddenly gone — no blame.",
+      'Sincerity binding people close together — no blame.',
+      "A rooster's crow trying to rise all the way to heaven — even staying true, this brings misfortune."
+    ]
+  },
+  62: {
+    yao: [
+      'A bird flying up and away — misfortune follows.',
+      'Passing by the grandfather, meeting the grandmother instead; not quite reaching the ruler, but meeting a trusted minister — no blame.',
+      "Failing to guard carefully enough against what's coming — someone may take advantage and cause real harm. Misfortune.",
+      "No blame — meeting the moment without overreaching. Moving forward calls for real caution; this isn't a time for rigid, unchanging resolve.",
+      'Dense clouds, still no rain, gathering from our western border — like a hunter finally catching what was hidden away in its den.',
+      'Overreaching instead of meeting the moment rightly — like a bird flying too far from safety. Misfortune — this is what\'s called bringing disaster on oneself.'
+    ]
+  },
+  63: {
+    yao: [
+      'Pulling back the wheel, getting the tail wet — no blame.',
+      "A woman losing her carriage-screen — don't chase after it; within seven days, it's found again.",
+      "Like the great king who campaigned against the distant frontier and took three full years to prevail — this isn't work for the small-minded or inexperienced.",
+      'Keeping rags on hand against a possible leak, staying watchful the whole day through.',
+      'The neighbor to the east sacrifices a whole ox, yet it means less than the modest, sincere offering from the neighbor to the west — it is sincerity that truly earns the blessing.',
+      'Even the head getting soaked now — danger.'
+    ]
+  },
+  64: {
+    yao: [
+      'The tail getting wet — regret.',
+      'Pulling back the wheel in time — staying true brings good fortune.',
+      'Not yet complete — pushing forward now brings misfortune, though it may still favor crossing the great river.',
+      'Staying true brings good fortune, and regret fades. Like a determined campaign against the distant frontier — after three years, real reward comes, even recognition from a great power.',
+      'Staying true brings good fortune, no regret — the brilliance of the noble one, carried with real sincerity. Good fortune.',
+      'Sincerity even in a moment of ease, sharing a drink — no blame. But let the head get soaked in it, and even real sincerity loses its way.'
+    ]
+  }
+};
+
+const BAIHUA_GUACI = {
+  1: "象徵天，具有創始、亨通、有利、正固四種德行；做事只要秉持正道，就能一路亨通。",
+  2: "象徵大地，具有廣大的亨通，像母馬一樣柔順、堅貞才有利。君子若搶先領頭會迷失方向，順從跟隨才能找到依歸；往西南得朋友，往東北失朋友；安於正道，吉祥。",
+  3: "萬事草創、充滿艱難，但仍大為亨通、有利於堅守正道；此時不宜貿然前進，適合建立輔佐人才來穩定局面。",
+  4: "蒙昧之時，仍可亨通；不是我去求教蒙昧無知的人，而是他主動來向我求教。誠心求問一次，我就回答；一再輕慢地重複求問，就不再回答。適合堅守正道。",
+  5: "心懷誠信，就能得到光明的亨通；堅守正道，吉祥；適合渡過大河，去成就大事。",
+  6: "心懷誠信卻遭到阻礙、心生警惕；訟事若能適可而止會吉祥，堅持打到底則有凶險。適合去拜見大人物，不適合冒險渡過大河。",
+  7: "出兵作戰須嚴守正道，並由德高望重、經驗豐富的人統率，才能吉祥，沒有災咎。",
+  8: "親近依附，吉祥。要像重新占卜一樣，反覆確認自己是否具備廣大、恆久、正直的德行，這樣才沒有災咎。心懷不安的人會陸續前來歸附，遲遲不肯前來依附的人，最終將招致凶險。",
+  9: "亨通。天空布滿濃雲卻遲遲不下雨，這雲是從我西邊的郊野聚集而來的——象徵力量正在蓄積，時機尚未成熟。",
+  10: "踩到老虎的尾巴，老虎卻沒有咬人，亨通——象徵即使身處危境，只要應對得宜、心存敬謹，也能安然無事。",
+  11: "小的（陰）退去，大的（陽）到來，天地交融、上下溝通，吉祥而亨通。",
+  12: "閉塞不通，不利於外人、也不利於君子堅守正道；大的（陽）離去，小的（陰）到來——象徵小人得勢、君子受阻的時局。",
+  13: "與人結盟合作，若能像在曠野中一樣不分你我、廣納各方，就會亨通順利；適合去涉險犯難、渡過大河，也適合君子堅守正道。",
+  14: "大為亨通。",
+  15: "亨通，君子謙遜到底，必能有好的結果。",
+  16: "適合封賞建立諸侯、興兵作戰。",
+  17: "大為亨通，適合堅守正道，沒有災咎。",
+  18: "大為亨通，適合渡過大河、成就大事；行事之前三天、之後三天都要仔細謀劃考量。",
+  19: "大為亨通，適合堅守正道；但到了陽氣轉衰的八月，會有凶險——提醒居安思危、盛極將轉。",
+  20: "如同祭祀時剛洗淨雙手、尚未獻上祭品的那一刻，內心已充滿誠敬莊嚴，令人心生仰望信服。",
+  21: "亨通，適合用來審理訴訟、施行刑罰。",
+  22: "亨通，適合小規模地前往行事。",
+  23: "此時情勢正逐漸被侵蝕剝落，不適合有所前往、有所作為。",
+  24: "亨通。出入往來都沒有阻礙災病，朋友前來也沒有災咎。陽氣往復循環、依循常道，第七天就會重新回來，此時適合有所前往、有所作為。",
+  25: "大為亨通，適合堅守正道；如果行事不正，就會招來禍患，不適合有所前往。",
+  26: "適合堅守正道，不只是守著自家吃穿度日，而是出仕任事，吉祥；適合渡過大河、成就大事。",
+  27: "堅守正道，吉祥。觀察頤養之道，要看一個人如何自己謀求維生的糧食（是否正當）。",
+  28: "屋樑（棟梁）彎曲下陷，此時適合有所行動，亨通。",
+  29: "面對重重險阻，要不斷學習應對之道；只要心懷誠信，內心便能保持亨通，主動有所作為就會有功績。",
+  30: "適合堅守正道，亨通；像畜養溫馴的母牛一樣柔順守中，吉祥。",
+  31: "亨通，適合堅守正道，娶妻吉祥。",
+  32: "亨通，沒有災咎，適合堅守正道，適合有所前往。",
+  33: "亨通，適合小規模地堅守正道。",
+  34: "適合堅守正道。",
+  35: "安邦定國的諸侯得到君王賞賜眾多的馬匹，一天之內三次受到接見——象徵備受恩寵、大展鴻圖。",
+  36: "適合在艱難的處境中堅守正道。",
+  37: "適合女子堅守正道，治家有方。",
+  38: "在小事上是吉祥的，此時不宜謀求大事。",
+  39: "適合往西南方向，不適合往東北方向；適合去拜見大人物，堅守正道，吉祥。",
+  40: "適合往西南方向；如果已經沒有需要前往之事，安然歸復是吉祥的；如果仍有事情要辦，及早行動則吉祥。",
+  41: "心懷誠信，大為吉祥，沒有災咎，可以堅守正道，適合有所前往。用什麼來祭祀呢？即使只有兩碗簡樸的祭品，也足以表達心意。",
+  42: "適合有所前往，適合渡過大河、成就大事。",
+  43: "在朝廷之上公開宣揚決斷除去小人的決心，即使心懷誠信地大聲疾呼，仍有危險；應先從自己的城邑做起、告知眾人，不適合立即訴諸武力，適合有所前往行動。",
+  44: "這樣強悍的女子，不適合娶她為妻。",
+  45: "亨通。君王藉此親臨宗廟致祭，適合去拜見大人物，亨通，適合堅守正道。用豐盛的祭品獻祭是吉祥的，適合有所前往。",
+  46: "大為亨通，適合去拜見大人物，不必憂慮，往南方前行是吉祥的。",
+  47: "亨通，堅守正道，對德高望重的人而言是吉祥的，沒有災咎；此時說再多的話，也難以取信於人。",
+  48: "城邑可以遷移改建，水井卻始終不變；井水無所謂損失，也無所謂增多，人們來來往往都靠這口井維生。但如果快要打到水了，井繩卻不夠長，汲水的瓶子也因此摔破，那就是凶險了——象徵功虧一簣。",
+  49: "等到適當的時機才會取信於人，大為亨通，適合堅守正道，悔恨消失。",
+  50: "大為吉祥，亨通。",
+  51: "亨通。雷聲震動來時令人心生恐懼戒慎，但事後又談笑自若；即使雷聲驚動了方圓百里，主祭者仍能穩住手中的祭器與美酒，不因驚嚇而失手。",
+  52: "停止於背部，不為外物所動、不為私欲所擾，感覺不到自身的存在；即使走在庭院之中，也感覺不到旁人的存在——這樣物我兩忘、心無雜念的境界，沒有災咎。",
+  53: "女子出嫁，循序漸進而行，吉祥，適合堅守正道。",
+  54: "貿然行動會有凶險，沒有任何好處。",
+  55: "亨通，君王親臨盛大的場面，不必憂慮，最適合像太陽正當中天一樣，把握盛大光明的時機。",
+  56: "小有亨通，客居在外的人堅守正道，吉祥。",
+  57: "小有亨通，適合有所前往，適合去拜見大人物。",
+  58: "亨通，適合堅守正道。",
+  59: "亨通。君王藉此親臨宗廟致祭，適合渡過大河、成就大事，適合堅守正道。",
+  60: "亨通。但過於嚴苛痛苦的節制，是無法長久堅持下去的。",
+  61: "內心誠信，即使只用小豬和魚這樣簡樸的祭品獻祭，也能得到吉祥；適合渡過大河、成就大事，適合堅守正道。",
+  62: "亨通，適合堅守正道。適合處理小事，不適合成就大事。就像飛鳥留下的鳴聲，不適合往上高飛，適合向下棲息，大為吉祥。",
+  63: "小有亨通，適合堅守正道。事情起初順利吉祥，但最終可能會生出禍亂——提醒人不可鬆懈。",
+  64: "亨通。小狐狸幾乎要渡過河了，卻在最後沾濕了尾巴，沒有任何好處——提醒行百里者半九十，越到最後越要謹慎。",
+};
+
+const LEGGE_GUACI = {
+  1: "Qián (represents) what is great and originating, penetrating, advantageous, correct and firm.",
+  2: "Kūn (represents) what is great and originating, penetrating, advantageous, correct and having the firmness of a mare. When the superior man has to make any movement, if he take the initiative, he will go astray; if he follow, he will find his (proper) lord. The advantageousness will be seen in his getting friends in the south-west, and losing friends in the north-east. If he rest in correctness and firmness, there will be good fortune.",
+  3: "Zhūn (indicates that in the case which it presupposes) there will be great progress and success, and the advantage will come from being correct and firm. (But) any movement in advance should not be (lightly) undertaken. There will be advantage in appointing feudal princes.",
+  4: "Méng (indicates that in the case which it presupposes) there will be progress and success. I do not (go and) seek the youthful and inexperienced, but he comes and seeks me. When he shows (the sincerity that marks) the first recourse to divination, I instruct him. If he apply a second and third time, that is troublesome; and I do not instruct the troublesome. There will be advantage in being firm and correct.",
+  5: "Xū intimates that, with the sincerity which is declared in it, there will be brilliant success. With firmness there will be good fortune; and it will be advantageous to cross the great stream.",
+  6: "Sòng intimates how, though there is sincerity in one's contention, he will yet meet with opposition and obstruction; but if he cherish an apprehensive caution, there will be good fortune, while, if he must prosecute the contention to the bitter end, there will be evil. It will be advantageous to see the great man; it will not be advantageous to cross the great stream.",
+  7: "Shī indicates how, in the case which it supposes, with firmness and correctness, and a leader of age and experience, there will be good fortune and no error.",
+  8: "Bǐ indicates that (under the conditions which it supposes) there is good fortune. But let the principal party intended in it re-examine himself, as if by divination, whether his virtue be great, unintermitting, and firm. If it be so, there will be no error. Those who have not rest will then come to him; and with those who are too late in coming it will be ill.",
+  9: "Xiǎo Chù indicates that (under its conditions) there will be progress and success. We see dense clouds, but no rain coming from our borders in the west.",
+  10: "(Lǚ suggests the idea of) one treading on the tail of a tiger, which does not bite him. There will be progress and success.",
+  11: "In Tài (we see) the little gone and the great come. (It indicates that) there will be good fortune, with progress and success.",
+  12: "In Pǐ there is the want of good understanding between the (different classes of) men, and its indication is unfavourable to the firm and correct course of the superior man. We see in it the great gone and the little come.",
+  13: "Tóng Rén (or 'Union of men') appears here (as we find it) in the (remote districts of the) country, indicating progress and success. It will be advantageous to cross the great stream. It will be advantageous to maintain the firm correctness of the superior man.",
+  14: "Dà Yǒu indicates that, (under the circumstances which it implies), there will be great progress and success.",
+  15: "Qiān indicates progress and success. The superior man, (being humble as it implies), will have a (good) issue (to his undertakings).",
+  16: "Yù indicates that, (in the state which it implies), feudal princes may be set up, and the hosts put in motion, with advantage.",
+  17: "Suí indicates that (under its conditions) there will be great progress and success. But it will be advantageous to be firm and correct. There will (then) be no error.",
+  18: "Gǔ indicates great progress and success (to him who deals properly with the condition represented by it). There will be advantage in (efforts like that of) crossing the great stream. (He should weigh well, however, the events of) three days before the turning point, and those (to be done) three days after it.",
+  19: "Lín (indicates that under the conditions supposed in it) there will be great progress and success, while it will be advantageous to be firmly correct. In the eighth month there will be evil.",
+  20: "Guān shows (how he whom it represents should be like) the worshipper who has washed his hands, but not (yet) presented his offerings;—with sincerity and an appearance of dignity (commanding reverent regard).",
+  21: "Shì Kè indicates successful progress (in the condition of things which it supposes). It will be advantageous to use legal constraints.",
+  22: "Bì indicates that there should be free course (in what it denotes). There will be little advantage (however) if it be allowed to advance (and take the lead).",
+  23: "Bō indicates that (in the state which it symbolises) it will not be advantageous to make a movement in any direction whatever.",
+  24: "Fù indicates that there will be free course and progress (in what it denotes). (The subject of it) finds no one to distress him in his exits and entrances; friends come to him, and no error is committed. He will return and repeat his (proper) course. In seven days comes his return. There will be advantage in whatever direction movement is made.",
+  25: "Wú Wàng indicates great progress and success, while there will be advantage in being firm and correct. If (its subject and his action) be not correct, he will fall into errors, and it will not be advantageous for him to move in any direction.",
+  26: "Under the conditions of Dà Chù it will be advantageous to be firm and correct. (If its subject do not seek to) enjoy his revenues in his own family (without taking service at court), there will be good fortune. It will be advantageous for him to cross the great stream.",
+  27: "Yí indicates that with firm correctness there will be good fortune (in what is denoted by it). We must look at what we are seeking to nourish, and by the exercise of our thoughts seek for the proper aliment.",
+  28: "Dà Guò suggests to us a beam that is weak. There will be advantage in moving (under its conditions) in any direction whatever; there will be success.",
+  29: "Kǎn, here repeated, shows the possession of sincerity, through which the mind is penetrating. Action (in accordance with this) will be of high value.",
+  30: "Lí indicates that, (in regard to what it denotes), it will be advantageous to be firm and correct, and that thus there will be free course and success. Let (its subject) also nourish (a docility like that of) the cow, and there will be good fortune.",
+  31: "Xián indicates that, (on the fulfilment of the conditions implied in it), there will be free course and success. Its advantageousness will depend on the being firm and correct, (as) in marrying a young lady. There will be good fortune.",
+  32: "Héng indicates successful progress and no error (in what it denotes). But the advantage will come from being firm and correct; and movement in any direction whatever will be advantageous.",
+  33: "Dùn indicates successful progress (in its circumstances). To a small extent it will (still) be advantageous to be firm and correct.",
+  34: "Dà Zhuàng indicates that (under the conditions which it symbolises) it will be advantageous to be firm and correct.",
+  35: "In Jìn we see a prince who secures the tranquillity (of the people) presented on that account with numerous horses (by the king), and three times in a day received at interviews.",
+  36: "Míng Yí indicates that (in the circumstances which it denotes) it will be advantageous to realise the difficulty (of the position), and maintain firm correctness.",
+  37: "For (the realisation of what is taught in) Jiā Rén, (or for the regulation of the family), what is most advantageous is that the wife be firm and correct.",
+  38: "Kuí indicates that, (notwithstanding the condition of things which it denotes), in small matters there will (still) be good success.",
+  39: "In (the state indicated by) Jiǎn advantage will be found in the south-west, and the contrary in the north-east. It will be advantageous (also) to meet with the great man. (In these circumstances), with firmness and correctness, there will be good fortune.",
+  40: "In (the state indicated by) Jiě advantage will be found in the south-west. If no (further) operations be called for, there will be good fortune in coming back (to the old conditions). If some operations be called for, there will be good fortune in the early conducting of them.",
+  41: "In (what is denoted by) Sǔn, if there be sincerity (in him who employs it), there will be great good fortune:—freedom from error; firmness and correctness that can be maintained; and advantage in every movement that shall be made. In what shall this (sincerity in the exercise of Sun) be employed? (Even) in sacrifice two baskets of grain, (though there be nothing else), may be presented.",
+  42: "Yì indicates that (in the state which it denotes) there will be advantage in every movement which shall be undertaken, that it will be advantageous (even) to cross the great stream.",
+  43: "Guài requires (in him who would fulfil its meaning) the exhibition (of the culprit's guilt) in the royal court, and a sincere and earnest appeal (for sympathy and support), with a consciousness of the peril (involved in cutting off the criminal). He should (also) make announcement in his own city, and show that it will not be well to have recourse at once to arms. (In this way) there will be advantage in whatever he shall go forward to.",
+  44: "Gòu shows a female who is bold and strong. It will not be good to marry (such) a female.",
+  45: "In (the state denoted by) Cuì, the king will repair to his ancestral temple. It will be advantageous (also) to meet with the great man; and then there will be progress and success, though the advantage must come through firm correctness. The use of great victims will conduce to good fortune; and in whatever direction movement is made, it will be advantageous.",
+  46: "Shēng indicates that (under its conditions) there will be great progress and success. Seeking by (the qualities implied in it) to meet with the great man, its subject need have no anxiety. Advance to the south will be fortunate.",
+  47: "In (the condition denoted by) Kùn there may (yet be) progress and success. For the firm and correct, the (really) great man, there will be good fortune. He will fall into no error. If he make speeches, his words cannot be made good.",
+  48: "(Looking at) Jǐng, (we think of) how (the site of) a town may be changed, while (the fashion of) its wells undergoes no change. (The water of a well) never disappears and never receives (any great) increase, and those who come and those who go can draw and enjoy the benefit. If (the drawing) have nearly been accomplished, but, before the rope has quite reached the water, the bucket is broken, this is evil.",
+  49: "(What takes place as indicated by) Gé is believed in only after it has been accomplished. There will be great progress and success. Advantage will come from being firm and correct. (In that case) occasion for repentance will disappear.",
+  50: "Dǐng gives the intimation of great progress and success.",
+  51: "Zhèn gives the intimation of ease and development. When (the time of) movement (which it indicates) comes, (the subject of the hexagram) will be found looking out with apprehension, and yet smiling and talking cheerfully. When the movement (like a crash of thunder) terrifies all within a hundred lî, he will be (like the sincere worshipper) who is not (startled into) letting go his ladle and (cup of) sacrificial spirits.",
+  52: "When one's resting is like that of the back, and he loses all consciousness of self; when he walks in his courtyard, and does not see any (of the persons) in it,—there will be no error.",
+  53: "Jiàn suggests to us the marriage of a young lady, and the good fortune (attending it). There will be advantage in being firm and correct.",
+  54: "Guī Mèi indicates that (under the conditions which it denotes) action will be evil, and in no wise advantageous.",
+  55: "Fēng intimates progress and development. When a king has reached the point (which the name denotes) there is no occasion to be anxious (through fear of a change). Let him be as the sun at noon.",
+  56: "Lǚ intimates that (in the condition which it denotes) there may be some little attainment and progress. If the stranger or traveller be firm and correct as he ought to be, there will be good fortune.",
+  57: "Xùn intimates that (under the conditions which it denotes) there will be some little attainment and progress. There will be advantage in movement onward in whatever direction. It will be advantageous (also) to see the great man.",
+  58: "Duì intimates that (under its conditions) there will be progress and attainment. (But) it will be advantageous to be firm and correct.",
+  59: "Huàn intimates that (under its conditions) there will be progress and success. The king goes to his ancestral temple; and it will be advantageous to cross the great stream. It will be advantageous to be firm and correct.",
+  60: "Jié intimates that (under its conditions) there will be progress and attainment. (But) if the regulations (which it prescribes) be severe and difficult, they cannot be permanent.",
+  61: "Zhōng Fú (moves even) pigs and fish, and leads to good fortune. There will be advantage in crossing the great stream. There will be advantage in being firm and correct.",
+  62: "Xiǎo Guò indicates that (in the circumstances which it implies) there will be progress and attainment. But it will be advantageous to be firm and correct. (What the name denotes) may be done in small affairs, but not in great affairs. (It is like) the notes that come down from a bird on the wing;—to descend is better than to ascend. There will (in this way) be great good fortune.",
+  63: "Jì Jì intimates progress and success in small matters. There will be advantage in being firm and correct. There has been good fortune in the beginning; there may be disorder in the end.",
+  64: "Wèi Jì intimates progress and success (in the circumstances which it implies). (We see) a young fox that has nearly crossed (the stream), when its tail gets immersed. There will be no advantage in any way.",
+};
+
+const BAIHUA_YAO = {
+  1: {
+    yao: [
+    "龍還潛伏在水底蓄積力量，時機未到，暫不宜有所作為。",
+    "龍已出現在地面上，適合去拜見德高望重的人物、爭取提攜。",
+    "君子整天勤奮不懈，到了晚上仍戒慎恐懼，即使身處危險也不會出錯。",
+    "龍或躍起、或仍潛在深淵，能審時度勢、進退得宜，就不會有災咎。",
+    "龍飛騰於天空，正是大展抱負的時候，適合去拜見大人物。",
+    "龍飛得過高、超過限度，必然招致悔恨。"
+    ],
+    yong: "滿卦皆是陽爻，如群龍出現卻不爭當首領，反而吉祥——象徵剛健而不逞強、謙退共治的美德。"
+  },
+  2: {
+    yao: [
+    "腳踩到薄霜，就知道嚴寒的堅冰不久將至——提醒人要在事情剛露苗頭時就有所警覺。",
+    "秉持正直、端方、寬厚的德行，即使不刻意經營，也沒有不順利的。",
+    "內斂才華、堅守正道；即使奉命做事，也不居功爭功，但事情終究有好結果。",
+    "像紮緊口袋一樣謹言慎行、不隨意表露，雖得不到讚譽，也不會招來禍患。",
+    "像穿著黃色下裳一樣，內心中正、行事得體，因此大為吉祥。",
+    "陰氣發展到極點，與陽氣在曠野中交戰，鮮血染得又黑又黃——象徵盛極而衝突難免。"
+    ],
+    yong: "六爻皆陰，象徵陰柔之德，最適合長久堅守正道。"
+  },
+  3: {
+    yao: [
+    "徘徊難進，像磐石與棟樑一樣穩住根基，適合安於正道、適合封賞賢能來穩定局勢。",
+    "處境艱難、猶豫不前，騎馬的人來來回回，其實不是強盜，而是來求婚的人；女子堅守貞節不肯輕易嫁人，直到十年後才終於出嫁。",
+    "追逐鹿卻沒有熟悉山林的嚮導帶路，只會迷失在林中；君子看清局勢，知道不如放棄，勉強前進只會招致憾事。",
+    "騎馬的人往來奔走，這回是真心求婚，前往必定吉祥，沒有不利。",
+    "恩澤蓄積難以廣施，若只求小事上堅守正道，還算吉祥，若求成就大事業，反有凶險。",
+    "騎馬的人依然徘徊不前，甚至傷心落淚、泣血漣漣，象徵艱難走到了極致。"
+    ]
+  },
+  4: {
+    yao: [
+    "啟發蒙昧，適合用規範、懲戒來導正，但對方明白後就該解除束縛；一味用刑罰壓著不放，反而招致憾事。",
+    "以包容的態度對待蒙昧的人，是吉祥的；娶妻也吉祥，如同兒子已有能力扛起一個家。",
+    "不要娶這樣的女子——她一見到有錢有勢的男人就把持不住自己，這樣的婚姻沒有好處。",
+    "深陷蒙昧、孤立無援，得不到啟發，因而有所憾恨。",
+    "像個天真單純、肯虛心受教的孩童，是吉祥的。",
+    "以強硬手段打擊蒙昧，但不適合像盜寇般地攻擊傷害對方，而是適合用來抵禦外來的侵擾。"
+    ]
+  },
+  5: {
+    yao: [
+    "在郊外耐心等待，適合保持恆心，不會有災咎。",
+    "在沙地上等待，雖會招來一些小的閒言閒語，但最終仍然吉祥。",
+    "等待時陷入泥濘之中，反而招來了敵寇的逼近。",
+    "等待中身陷血光般的險境，但最終能夠脫離險穴。",
+    "在酒食豐盛中安然等待，堅守正道，吉祥。",
+    "進入洞穴之中，有三位不請自來的客人到訪，只要以恭敬之心對待他們，最終仍是吉祥的。"
+    ]
+  },
+  6: {
+    yao: [
+    "不把爭訟的事情拖得太久，雖有些小的口舌之爭，最終仍然吉祥。",
+    "訟事打不贏，不如退回自己僅有三百戶人家的小城邑安分度日，這樣就不會招來災禍。",
+    "安於舊有的福分度日，雖處境艱難，只要守正，最終仍吉祥；即使受命做事，也不必去爭搶功勞。",
+    "訟事打不贏，於是回頭順應天命、改變心態，安於正道，就能得到吉祥。",
+    "由居中持正的人來裁斷訟事，是大為吉祥的。",
+    "即使因打贏官司而獲賜華麗的腰帶，這份榮耀也可能一天之內三次被剝奪——象徵靠爭訟得來的東西難以長久。"
+    ]
+  },
+  7: {
+    yao: [
+    "軍隊出征必須嚴守紀律，如果紀律不良，就會招致凶險。",
+    "統帥身處軍中、居中掌權，吉祥且沒有災咎，君王更三次頒賜嘉獎、委以重任。",
+    "軍隊可能戰敗，用車載運屍體回來，凶險。",
+    "軍隊審時度勢、暫時退守，沒有災咎。",
+    "田獵中發現獵物（象徵敵人來犯），適合出兵討伐，沒有災咎；但必須由年長有德之人統率，若讓才德不足的人領軍，即使動機正當，結果仍會凶險。",
+    "君王論功行賞，封賞有功者建國封邑、承繼家業，但不可任用德行淺薄的小人。"
+    ]
+  },
+  8: {
+    yao: [
+    "以誠信與人相親，沒有災咎；誠信充盈得像裝滿一整罐一樣，最終還會有意想不到的好事到來，吉祥。",
+    "由內心真誠地親近對方，堅守正道，吉祥。",
+    "所親近依附的，是不該親近的人。",
+    "向外親近賢者，堅守正道，吉祥。",
+    "光明磊落地與人相親，就像君王行狩獵之禮時只圍三面、放走正面逃走的獵物，百姓也不需要特別提防警戒，吉祥。",
+    "想要與人相親卻始終抓不到開始的時機、找不到可以依附的對象，凶險。"
+    ]
+  },
+  9: {
+    yao: [
+    "回歸自己原本應走的正道，哪裡會有什麼過錯呢？吉祥。",
+    "受到牽引而回歸正道，吉祥。",
+    "車輪的輻條脫落散開，就像夫妻反目成仇一般——象徵內部關係出了問題。",
+    "心懷誠信，就能讓傷害與恐懼都隨之消散，沒有災咎。",
+    "以誠信緊密團結身邊的人，因而能與鄰人共享富足。",
+    "雨終於下了，一切也都安定下來，這是德行日漸積累的結果；但如果婦人執意堅守於此會有危險，就像月亮快要圓滿一樣盛極將轉；此時君子若貿然出征，將有凶險。"
+    ]
+  },
+  10: {
+    yao: [
+    "以樸素、本分的態度行事前進，沒有災咎。",
+    "走在平坦寬廣的大道上，即使是隱居守靜的人，只要堅守正道，也能吉祥。",
+    "一隻眼睛看不清楚卻勉強說能看見，腳跛了卻勉強說能走路，就這樣冒然踩到老虎尾巴，結果被老虎咬傷，凶險——就像有勇無謀的武夫，卻妄想擔當君王的大任一樣。",
+    "踩到老虎尾巴，心懷戒慎恐懼，最終仍能吉祥。",
+    "行事過於果決剛斷，即使堅守正道，仍有危險。",
+    "回顧自己一路走來的行止，仔細省察其中的吉凶徵兆，如果一切圓滿周全，就會有極大的吉祥。"
+    ]
+  },
+  11: {
+    yao: [
+    "拔起茅草，連根鬚都一併牽動、同類相聚而起，就像志同道合的人相互扶持——此時前進，吉祥。",
+    "能包容荒穢、缺失之人事物，勇於徒步涉險渡河，不遺漏疏遠之人，也不偏私結黨——這樣行事合乎中道，因而能得到助益。",
+    "沒有永遠平坦而不生起伏的地勢，也沒有只去而不返的道理；在艱難中堅守正道，就沒有災咎，不必為誠信是否被理解而憂慮，安分度日自然會有福澤。",
+    "輕盈飛快地前來，不倚仗自身的富足，而是與鄰人互助往來，彼此以誠相待，無需刻意告誡提防。",
+    "如同帝乙將妹妹（女兒）嫁出去和親一般，因此得到福澤，大為吉祥。",
+    "城牆傾頹、崩塌回填護城河中，此時不宜出兵征伐，只適合在自己城邑內發布政令；即使如此，堅持下去仍會有所憾惜——象徵泰極將轉為否的警示。"
+    ]
+  },
+  12: {
+    yao: [
+    "拔起茅草，連根鬚都一併牽動、同類相聚而起；在此閉塞之時仍堅守正道，吉祥、亨通。",
+    "包容順從在上位者，對小人而言是吉祥的；但對君子而言，即使身處閉塞逆境，仍堅守原則不苟合，反而能通達。",
+    "暗自包藏著羞愧之心，行事有所愧疚。",
+    "秉持天命而行事，沒有災咎，志同道合的人也能因此共同蒙受福澤。",
+    "閉塞的時局逐漸止息，對德高望重的人來說是吉祥的；但仍要時時警惕「恐怕要滅亡了、恐怕要滅亡了」，才能像繫在叢生桑樹上一樣穩固牢靠。",
+    "閉塞的局面終於徹底翻轉過來，先前雖然閉塞艱困，之後便迎來歡喜。"
+    ]
+  },
+  13: {
+    yao: [
+    "一出門就能與人結盟合作，沒有災咎。",
+    "只跟自己的宗族親人結盟，眼光過於狹隘，會招致憾惜。",
+    "在草莽中埋伏兵力，登上高地窺伺敵情，但三年之間都無法有所行動。",
+    "登上城牆準備攻打，卻適時罷手不強攻，吉祥。",
+    "與人結盟合作的過程先是痛哭哀號，後來卻轉為歡笑——因為經過激烈的爭戰後，終於與同伴會合。",
+    "在郊野與人結盟合作，沒有悔恨。"
+    ]
+  },
+  14: {
+    yao: [
+    "不與人有害處的往來，本身沒有過錯；只要能謹記處境的艱難、心存戒慎，就不會有災咎。",
+    "用大車來裝載重物，此時適合前往行事，沒有災咎。",
+    "諸侯受天子款待、共享盛宴，這樣的際遇是德行淺薄的小人難以承擔的。",
+    "不誇耀自己的盛大聲勢、懂得收斂，沒有災咎。",
+    "以誠信與人交往，同時保有應有的威嚴，吉祥。",
+    "得到上天的庇佑保護，吉祥，沒有不利之事。"
+    ]
+  },
+  15: {
+    yao: [
+    "謙虛又謙虛的君子，就算用來渡過大河、涉險犯難，也能吉祥。",
+    "謙遜的美德由衷而發、自然流露出來，堅守正道，吉祥。",
+    "勤勞任事又謙遜自持的君子，能夠善始善終，吉祥。",
+    "處處施展謙遜的美德，沒有不利之事。",
+    "自身不算富裕，但能號召鄰邦（志同道合者）一起行動，適合用來征討不服從的對象，沒有不利之事。",
+    "謙遜之名遠揚，此時適合出兵，但只用來整頓、平定自己國內的城邑，而非對外侵略。"
+    ]
+  },
+  16: {
+    yao: [
+    "得意忘形、張揚自己的安樂享受，凶險。",
+    "像磐石一樣堅定，能在事情尚未發生之前就有所警覺、不到一天就看清局勢，堅守正道，吉祥。",
+    "仰望、依附上位者來獲取安樂享受，會有悔恨；猶豫遲疑不改，悔恨會更深。",
+    "安樂與成就都是由此爻而來，能有很大的收穫；不要心存疑慮，志同道合的朋友自然會像髮簪聚攏頭髮一樣聚集在身邊。",
+    "像是身患慢性疾病，堅守正道以自持，雖然體弱，卻能長久維持而不至於敗亡。",
+    "沉溺在安逸享樂中而昏昧不明，但如果能在事情已成定局時及時轉變心態、有所警覺，就不會有災咎。"
+    ]
+  },
+  17: {
+    yao: [
+    "所掌管的職務、原則有所變動時，只要堅守正道就能吉祥；走出門去廣泛結交，反而能建立功績。",
+    "只顧著牽繫住身邊淺薄的小人物，卻因此失去了真正值得依靠的賢德之人。",
+    "牽繫住值得依靠的賢德之人，捨棄淺薄的小人物；這樣去追求，就能有所收穫，適合安於正道。",
+    "追隨、招攬人心而大有斬獲，若居功自傲、堅持己見，反而會有凶險；只要心懷誠信、行事光明磊落，又哪裡會有什麼過錯呢？",
+    "以真誠信實對待美善的人事物，吉祥。",
+    "將對方緊緊繫住、維繫住這份誠心相隨的關係，就像君王在西山向神明獻祭一樣虔誠鄭重。"
+    ]
+  },
+  18: {
+    yao: [
+    "兒子出面整頓父親留下的弊病，如果這個兒子夠賢能，父親也就不會因此蒙受責難；雖然過程艱難，最終仍然吉祥。",
+    "整頓母親留下的弊病時，不能一味固守剛猛強硬的態度，宜柔和委婉行事。",
+    "整頓父親留下的弊病，雖然會有些小的懊悔，但不至於釀成大災禍。",
+    "用過於寬鬆縱容的方式處理父親留下的弊病，這樣下去只會招致憾惜。",
+    "整頓父親留下的弊病，因而得到美好的名聲與讚譽。",
+    "不去侍奉君王諸侯、追逐名位，反而更顯出他志向的高潔可貴。"
+    ]
+  },
+  19: {
+    yao: [
+    "以真誠感應之心親臨監督，堅守正道，吉祥。",
+    "以真誠感應之心親臨監督，吉祥，沒有不利之事。",
+    "只用甜言蜜語、討好敷衍的方式去監臨，不會有什麼益處；但只要能自知憂慮、有所警惕，就不會有災咎。",
+    "以誠懇周全的態度親臨監督，沒有災咎。",
+    "以智慧來監臨，懂得任用賢能，這正是身為君王應有的作法，吉祥。",
+    "以敦厚篤實的態度親臨監督，吉祥，沒有災咎。"
+    ]
+  },
+  20: {
+    yao: [
+    "像孩童一樣淺薄地觀看事物，對見識淺薄的人來說沒有什麼過錯，但對君子而言，這樣的眼界會招致憾惜。",
+    "從門縫中偷看、視野狹隘地觀察，這樣的態度只適合女子堅守本分，不適合有遠大抱負的人。",
+    "觀察自己一路以來的所作所為，藉此謹慎判斷該前進還是該後退。",
+    "觀摩見識一個國家的光輝盛況，適合藉此機會成為君王的座上賓，貢獻自己的才能。",
+    "反觀自身的行止與德行，只要是君子，就不會有過錯。",
+    "觀察他人（或自己一生）的行止是否合乎正道，只要是君子，就不會有過錯。"
+    ]
+  },
+  21: {
+    yao: [
+    "腳上戴著刑具、遮住了腳趾，這是輕微的懲戒，沒有災咎。",
+    "像咬穿柔嫩的肉、深及鼻子一樣（懲處得恰如其分、乾脆俐落），沒有災咎。",
+    "像咬著又乾又硬的臘肉，還嚐到了不好的滋味，會有小小的挫折與憾惜，但不會有大災咎。",
+    "像咬著帶骨的乾肉，卻意外咬到了銅箭頭一般（案情棘手複雜），此時要謹記艱難、堅守正道，吉祥。",
+    "像咬著乾肉卻嚐到了黃金的滋味，即使身處艱險，只要堅守正道、心存戒懼，就不會有災咎。",
+    "頸上戴著沉重的刑具、遮住了耳朵，這是嚴重的懲罰，凶險。"
+    ]
+  },
+  22: {
+    yao: [
+    "修飾自己的腳步儀容，寧可捨棄乘車、徒步而行——象徵樸實自持、不慕虛榮。",
+    "修飾鬍鬚——比喻依附、襯托他人（如同下屬修飾上位者的形象），彼此相輔相成。",
+    "修飾得潤澤有光彩，能夠長久堅守正道，吉祥。",
+    "修飾得潔白樸素，騎著白色的駿馬疾馳而來，對方不是強盜，而是前來求婚的人。",
+    "在山丘園林之間樸素地修飾自己，聘禮的束帛雖然微薄簡單、顯得有些寒酸，但最終仍然吉祥。",
+    "回歸樸素潔白、不加修飾的本色，沒有災咎。"
+    ]
+  },
+  23: {
+    yao: [
+    "床腳開始被剝蝕損壞，正道逐漸被侵蝕殆盡，凶險。",
+    "床板也開始被剝蝕損壞，正道持續被侵蝕，凶險。",
+    "雖然身處剝落侵蝕的局勢當中，但沒有災咎。",
+    "剝蝕已經逼近床上的臥席（貼身之處），凶險。",
+    "像一串排列整齊的魚一樣，帶領眾人依序歸順、受到上位者的寵信眷顧，沒有不利之事。",
+    "碩大的果實還留在枝頭沒被摘食，君子因此能得到百姓擁戴、有如乘上大車，小人卻反而摧毀了自己安身立命的屋舍。"
+    ]
+  },
+  24: {
+    yao: [
+    "偏離正道不遠就能及時醒悟返回，不至於釀成悔恨，大為吉祥。",
+    "能夠美善地回歸正道（親近賢者、隨之而歸），吉祥。",
+    "一再反覆、屢次偏離又折返，雖然處境艱難，但沒有災咎。",
+    "走在眾人之中，卻能獨自堅持、回歸正道。",
+    "以敦厚篤實的態度回歸正道，反省自身，沒有悔恨。",
+    "一味迷失而不知回頭，凶險，還會招致災禍。如果在此時出兵作戰，最終將遭遇慘敗，甚至危及國君自身的安危，往後十年都無法再次出征。"
+    ]
+  },
+  25: {
+    yao: [
+    "行事沒有虛妄不實，前往吉祥。",
+    "不因期待收穫才去耕種，不因田地已熟才去開墾——順其自然、不刻意強求，這樣去做事反而有利。",
+    "無端招來的意外災禍，就像有人拴著的牛被過路人牽走了，反而害城裡的人蒙受無妄的災禍、被誣賴受累。",
+    "可以堅守正道，沒有災咎。",
+    "無端而來的疾病，不需要刻意用藥治療，自然會痊癒、帶來喜悅。",
+    "即使行事沒有虛妄不實，此時貿然行動仍會招致禍患，沒有任何好處。"
+    ]
+  },
+  26: {
+    yao: [
+    "有危險，適合就此停止、不要前進。",
+    "車輪脫離了車軸，車子動彈不得——象徵此時宜暫停、不宜強行。",
+    "良馬奮力追逐前行，此時要謹記艱難、堅守正道，並每日勤加練習駕車與防衛的技能，適合有所前往。",
+    "在小牛的角上及早加上橫木加以約束，防患於未然，大為吉祥。",
+    "像被閹割過的豬，即使長出獠牙也不再具有傷人的凶性，吉祥。",
+    "如同登上暢通無阻的天空大道，亨通。"
+    ]
+  },
+  27: {
+    yao: [
+    "捨棄自己原本就具備的德行、才能（如靈龜般珍貴），反而眼巴巴地羨慕、覬覦別人吃香喝辣，凶險。",
+    "顛倒過來向下位者求取奉養，違背了常理；若又轉而向高丘（上位者）求養，繼續這樣做下去會有凶險。",
+    "違背了頤養的正道，即使想要堅守，也會有凶險，十年之內都不宜有所作為，沒有任何好處。",
+    "雖是顛倒向下位者求取奉養，但吉祥；像老虎般目光緊盯獵物，需求毫不掩飾地流露出來，也不會有災咎。",
+    "雖然作法上違反常理（依賴他人奉養），但只要安於本分、堅守正道，仍然吉祥；只是此時不適合去渡河、涉險犯難。",
+    "作為眾人賴以頤養的根本源頭，雖然責任重大、處境艱難，但吉祥，適合渡過大河、成就大事。"
+    ]
+  },
+  28: {
+    yao: [
+    "用潔白的茅草鋪墊在下方，做事格外謹慎小心，沒有災咎。",
+    "枯萎的楊樹重新發芽，如同年老的男子娶得年輕的妻子，沒有不利之事。",
+    "屋樑彎曲下陷，凶險。",
+    "屋樑高高隆起、穩固有力，吉祥；但若又生出其他枝節、三心二意，則會有所憾惜。",
+    "枯萎的楊樹開出花朵，如同年老的婦人嫁得年輕的丈夫，沒有災咎，但也談不上有什麼值得稱頌的。",
+    "涉水過河，水深到淹沒了頭頂，凶險，但這是勇於承擔、義無反顧所致，因此並非自己的過錯，沒有應受責難之咎。"
+    ]
+  },
+  29: {
+    yao: [
+    "一再落入重重險阻之中，深陷坑洞裡難以自拔，凶險。",
+    "身處險境之中，只求得到小小的收穫（不奢求一次脫險）。",
+    "無論進退都身陷重重危險之中，前後都是險阻，深陷坑洞裡，此時不宜有所作為。",
+    "只用簡樸的一樽酒、兩碗食物，以瓦缶盛裝，簡約地從窗口遞送進去（誠心相待、不拘俗禮），最終沒有災咎。",
+    "坑洞裡的水尚未滿溢，四周的地勢也已漸趨平坦——象徵險境正逐漸緩解，沒有災咎。",
+    "被繩索緊緊捆綁，囚禁在荊棘叢生之地，三年都無法脫身，凶險。"
+    ]
+  },
+  30: {
+    yao: [
+    "行事之初腳步顯得慌亂交錯，但只要心存恭敬謹慎，就沒有災咎。",
+    "附著、依附得像黃色一樣居中守正，大為吉祥。",
+    "如同太陽已經西斜、即將落下時分，如果不能敲著瓦盆放聲歌唱、及時行樂，就只能發出年老將盡的悲嘆，凶險。",
+    "災禍來得又急又猛，如同被烈火焚燒、面臨死亡、遭到遺棄一般——形容變故的猛烈與淒慘。",
+    "淚流滿面、悲傷哀嘆，但最終能依附於得位者而獲得吉祥。",
+    "君王藉此出兵征伐，只誅殺為首的罪魁禍首，不追究、俘虜跟隨附從的一般人，沒有災咎。"
+    ]
+  },
+  31: {
+    yao: [
+    "感應到腳的大拇指——象徵感應初萌、尚未有實質行動。",
+    "感應到小腿肚，若貿然行動會有凶險，安居不動反而吉祥。",
+    "感應到大腿，只知緊隨他人腳步、被動附和，這樣前進會有憾惜。",
+    "堅守正道，吉祥，悔恨消失。若心思猶疑不定、來回搖擺，那麼身邊的人也只會跟隨你這份不安定的心思。",
+    "感應到脊背（不易察覺、不受外物牽動之處），沒有悔恨。",
+    "感應只停留在嘴上說說（臉頰、舌頭），流於空言、缺乏實質行動。"
+    ]
+  },
+  32: {
+    yao: [
+    "一開始就急於求成、深挖恆久之道，即使堅守也會有凶險，沒有任何好處。",
+    "悔恨消失。",
+    "不能長久堅持自己的德行、原則，難免招致羞辱，即使想要堅守也會有所憾惜。",
+    "田獵卻捕獲不到任何獵物——象徵用心錯了方向，徒勞無功。",
+    "長久堅持柔順、從一而終的德行，這對婦女而言是吉祥的，但對於應當剛毅果斷的男子而言，卻是凶險的。",
+    "妄動、輕易改變一貫的常道，凶險。"
+    ]
+  },
+  33: {
+    yao: [
+    "退避得太晚、落在最後面，處境危險，此時不宜有所前往。",
+    "用黃牛皮革繩緊緊繫住，牢固到無法解開——象徵心志堅定、難以動搖。",
+    "心中有所牽掛而遲遲不肯退避，會有困擾與危險；但若只用來蓄養家中的僕從侍妾（處理些小事），則是吉祥的。",
+    "即使心中有所喜好眷戀，君子仍能斷然退避，這樣是吉祥的；但小人卻做不到。",
+    "以美好、得體的方式退避，堅守正道，吉祥。",
+    "從容、優游自得地遠遠退避，沒有不利之事。"
+    ]
+  },
+  34: {
+    yao: [
+    "力量只逞強在腳趾上（急躁冒進），前進會有凶險，這是必然的。",
+    "堅守正道，吉祥。",
+    "小人只知逞強蠻幹，君子則懂得謹慎收斂、不會如此；即使堅守正道，也仍有危險——就像公羊用角衝撞籬笆，反而被籬笆卡住了角。",
+    "堅守正道，吉祥，悔恨消失；籬笆被撞開、不再受困，力量強大得就像大車堅固的車軸一樣暢行無阻。",
+    "在邊境上不知不覺失去了羊（陽剛之力），但沒有悔恨。",
+    "公羊用角衝撞籬笆，卡在中間進退不得，沒有任何好處；只有正視眼前的艱難、謹慎應對，才能轉為吉祥。"
+    ]
+  },
+  35: {
+    yao: [
+    "前進的過程受到阻礙、挫折，但堅守正道，吉祥；即使不被信任理解，只要心胸寬裕、不急躁，也不會有災咎。",
+    "前進的過程中滿懷憂慮，但堅守正道，吉祥；最終能從尊長（祖母）那裡得到大大的福澤。",
+    "得到眾人的信賴與認同，悔恨消失。",
+    "前進的樣子像隻膽小怕事、患得患失的鼫鼠，即使堅守，處境仍然危險。",
+    "悔恨消失，不必計較一時的得失，前進吉祥，沒有不利之事。",
+    "晉升到了最頂端、如同伸出頭角一般，此時只適合用來整肅、討伐自己內部的城邑，雖然艱難但吉祥、沒有災咎，但若長久固守這種強硬作法，仍會有所憾惜。"
+    ]
+  },
+  36: {
+    yao: [
+    "光明受創的鳥兒展翅飛翔，卻無力地垂下了翅膀；君子在逃難的路途中，一連三天都吃不上東西；即使有所前往，也會遭到主人的責怪非議。",
+    "光明受創之時，左腿也受了傷，靠著強健的馬匹相助才得以脫困，吉祥。",
+    "在光明受創的亂世裡到南方狩獵征討，擒獲了為首的元凶，但不可操之過急、急於求成。",
+    "深入敵人（黑暗勢力）的核心之處，看穿了造成光明受創之亂局的真正用心，於是決然出走、遠離此地。",
+    "如同箕子身處光明受創的亂世之中，佯狂裝愚以自保，適合堅守正道。",
+    "不再有光明，只剩下一片昏暗；起初如日中天般登上高位，最終卻墜落於黑暗的深淵之中。"
+    ]
+  },
+  37: {
+    yao: [
+    "一開始就為家庭立下規矩、防範於未然，悔恨消失。",
+    "不擅自主張、不強出頭，安於在家中料理飲食家務，堅守正道，吉祥。",
+    "治家過於嚴厲，雖然會有悔恨與艱難之感，但最終吉祥；若婦人孩子只知嬉笑放縱、家教鬆散，最終會招致憾惜。",
+    "使家庭富裕興旺，大為吉祥。",
+    "君王以治國的誠意來經營自己的家庭，不必憂慮，吉祥。",
+    "以誠信立身，同時保有應有的威嚴，最終吉祥。"
+    ]
+  },
+  38: {
+    yao: [
+    "悔恨消失，丟失的馬不必去追，牠自己會回來；即使遇見存心不良的人，也不會有災咎。",
+    "在巷弄之間（非正式的場合）與上位者相遇，沒有災咎。",
+    "看見車子被拖曳前行、牛也被牽制得動彈不得，車上的人還被施以在額頭刺字、割鼻的刑罰——一開始很不順利，但最終總算有個結果。",
+    "處於乖離孤立的處境，卻遇到了志同道合的賢者，彼此以誠相待，即使艱難，也不會有災咎。",
+    "悔恨消失，宗族親人像咬穿柔軟的肉一樣容易地與自己重新和好，這樣前去交往，又有什麼過錯呢？",
+    "處於乖離孤立的極致，眼花繚亂地看見豬背上沾滿了泥污、一整車看似鬼怪的東西，先是張弓戒備，後來又放下弓——原來對方不是強盜，而是前來求婚的人；此時前去，若能遇上及時雨，便能化解一切猜疑，吉祥。"
+    ]
+  },
+  39: {
+    yao: [
+    "前進會遇到艱難險阻，退回來反而能得到讚譽。",
+    "君王的臣子身陷重重艱難之中，這並非為了自身的私利，而是一心為公。",
+    "前進會遇到艱難，因此折返回來。",
+    "前進會遇到艱難，於是退回來與同伴會合、彼此聯繫扶持。",
+    "身處極大的艱難之中，但朋友紛紛前來相助。",
+    "前進會遇到艱難，退回來反而能有豐碩的成果，吉祥，適合去拜見大人物。"
+    ]
+  },
+  40: {
+    yao: [
+    "沒有災咎。",
+    "田獵時捕獲了三隻狐狸，還得到象徵正直的黃色箭矢，堅守正道，吉祥。",
+    "背著重物卻又乘坐車輛（身分與行為不相稱、張揚招搖），因而招來了盜賊，即使想要堅守，也會有所憾惜。",
+    "解開束縛住腳趾的枷鎖（去除身邊瑣碎、不相稱的牽絆），志同道合的朋友便會誠心前來相聚。",
+    "君子能夠化解眼前的困境與紛爭，吉祥，甚至連小人都會因此心悅誠服、信任於他。",
+    "王公在高高的城牆上射殺為害的猛禽，一舉擒獲，沒有不利之事。"
+    ]
+  },
+  41: {
+    yao: [
+    "事情一了結就趕緊前去幫助他人，沒有災咎，但仍應斟酌拿捏、適度減損自己。",
+    "適合堅守正道，貿然出征行動會有凶險；不刻意自我減損，反而能對他人有所助益。",
+    "三人同行，必然會因意見不合而減損一人；獨自一人前行，反而能得到知心的朋友。",
+    "及時減損自己的毛病、缺失，迅速讓喜悅到來，沒有災咎。",
+    "有人贈與價值十朋的珍貴神龜，無法推辭，大為吉祥。",
+    "不減損自己，反而能利益他人，沒有災咎，堅守正道，吉祥，適合有所前往，甚至能得到不分親疏、四海之內皆能任用的賢臣。"
+    ]
+  },
+  42: {
+    yao: [
+    "適合藉此機會成就一番大事業，大為吉祥，沒有災咎。",
+    "有人贈與價值十朋的珍貴神龜，無法推辭，長久堅守正道，吉祥；君王藉此獻祭於上天，吉祥。",
+    "把增益的資源用在救濟艱難凶險之事上，沒有災咎；只要心懷誠信、行事合乎中道，並鄭重地向上位者稟告求證，就不會有問題。",
+    "行事合乎中道，向上位者稟告並獲得認可支持，適合藉此推動遷都這樣的大事。",
+    "心懷誠信、一心施惠於眾人，不必多問就知道是大為吉祥的；人們也將以同樣的誠信來回報、感念這份恩德。",
+    "沒有人願意再增益幫助他，甚至反過來攻擊他——這是因為他心志不堅定、不能長久保持初衷，因此凶險。"
+    ]
+  },
+  43: {
+    yao: [
+    "力量只表現在腳趾上（急躁冒進），貿然前進卻不能取勝，反而成了過錯。",
+    "心懷警惕、大聲疾呼戒備，即使夜裡可能有敵情，也不必過度憂慮。",
+    "怒氣顯露在臉上（過於外顯而不夠謹慎），會有凶險；君子當機立斷、獨自前行，途中遇雨淋濕了衣服，雖然心裡有些不悅，但沒有災咎。",
+    "像屁股沒了皮膚一樣坐立難安、行走困難、猶豫不前；如果能像牽著羊一樣順勢而行，悔恨就會消失；但聽到這樣的勸告卻不肯相信。",
+    "像剷除莧草、商陸這類柔弱雜草一樣果斷決絕，行事合乎中道，沒有災咎。",
+    "不再有人為他大聲疾呼、聲援求救，最終招致凶險。"
+    ]
+  },
+  44: {
+    yao: [
+    "用金屬的止動裝置牢牢繫住、加以節制約束，堅守正道，吉祥；若任其前往發展，將會招致凶險，就像瘦弱的豬隻仍然焦躁不安、蠢蠢欲動一樣。",
+    "廚房裡有魚可以自用，沒有災咎，但不適合拿來款待賓客（不宜與他人分享）。",
+    "像屁股沒了皮膚一樣坐立難安、行走困難，處境艱難，但不至於釀成大災咎。",
+    "廚房裡沒有魚了（失去了原本擁有的資源、民心），一有所行動就會招致凶險。",
+    "用杞樹的枝葉包覆著瓜果（以尊貴之身包容柔弱之物），內心蘊藏著美好的才德，如同天賜的福分自然降臨。",
+    "相遇之時已經到了如頭角般的最頂端、最邊緣之處，會有些憾惜，但沒有大的災咎。"
+    ]
+  },
+  45: {
+    yao: [
+    "誠信未能貫徹到底，因而引來一陣混亂與聚合；若能出面號召，與人握手言和、一笑泯恩仇，不必憂慮，前往沒有災咎。",
+    "受到牽引提攜，吉祥，沒有災咎；心懷誠信，即使只用簡薄的祭品獻祭，也是適宜的。",
+    "想要聚合卻只能嘆息，沒有什麼好處；但前往仍不會有災咎，只是會有些小小的憾惜。",
+    "大為吉祥，沒有災咎。",
+    "居於尊位而能聚合眾人，沒有災咎；即使還有人尚未心悅誠服，只要能長久保持宏大、堅定的正道，悔恨終將消失。",
+    "悲傷哀嘆、涕淚縱橫，但沒有災咎。"
+    ]
+  },
+  46: {
+    yao: [
+    "順勢向上提升，大為吉祥。",
+    "心懷誠信，即使只用簡薄的祭品獻祭，也是適宜的，沒有災咎。",
+    "向著空曠的城邑（無人阻攔之地）順利上升前進。",
+    "君王藉此在岐山獻祭，吉祥，沒有災咎。",
+    "堅守正道，吉祥，如同拾級而上、步步高升。",
+    "在幽暗不明之中仍然執意上升，此時適合抱持恆久不懈的正道。"
+    ]
+  },
+  47: {
+    yao: [
+    "像坐在光禿禿的樹樁上一樣困頓難安，又深陷幽暗的山谷之中，三年都不見天日。",
+    "雖處困境，卻仍有酒食可享，這時穿著朱紅色禮服的貴人即將到來；適合藉此獻祭祈福，貿然出征則有凶險，但沒有災咎。",
+    "被堅硬的石頭困住，又倚靠在帶刺的蒺藜之上，回到自己家中，卻見不到妻子，凶險。",
+    "援助遲遲才到，是因為被沉重堅固的車輛所困，雖然會有些憾惜，但最終總算有個結果。",
+    "受到割鼻斷足般嚴酷的刑罰所困，又受制於穿著赤紅禮服的權貴，但漸漸地終能得到寬解，適合藉此祭祀祈福。",
+    "被藤蔓纏繞困住，處境動盪不安，心裡明白一旦妄動就會招致悔恨；只要能真心悔悟、謹慎而行，此時出征反而吉祥。"
+    ]
+  },
+  48: {
+    yao: [
+    "井底淤泥沉積，井水混濁不能飲用；老舊廢棄的井，連鳥獸都不再靠近。",
+    "井中的水只夠射中小魚小蝦，發揮不了大用，汲水的甕又破損漏水。",
+    "井水已經淘洗乾淨了，卻沒有人來汲取飲用，讓人心中悲傷；其實這口井是可以汲取的，只要君王聖明，人人都能受惠得福。",
+    "修砌井壁、鞏固井身，沒有災咎。",
+    "井水清冽甘美，清涼的泉水可供人飲用。",
+    "汲水完畢後不要蓋上井口，讓人人都能自由取用，心懷誠信，大為吉祥。"
+    ]
+  },
+  49: {
+    yao: [
+    "用黃牛皮革繩牢牢綁緊固定——象徵時機未到，此時應先鞏固自身、按兵不動。",
+    "等到適當的時機到來才進行變革，此時前進吉祥，沒有災咎。",
+    "貿然出征會有凶險，即使堅守正道也有危險；變革之事必須經過反覆討論、確認三次，才能取信於人。",
+    "悔恨消失，心懷誠信而改革舊有的體制、命令，吉祥。",
+    "德高望重的人如老虎換毛一般，變革得鮮明有力、令人耳目一新，甚至不用占卜，人們就已心悅誠服。",
+    "君子如豹子換毛一樣，隨著變革日益精進完善，小人也跟著轉變態度、表面順從；此時若貿然出征會有凶險，安於現狀、堅守正道才會吉祥。"
+    ]
+  },
+  50: {
+    yao: [
+    "鼎足翻轉朝上，但反而有利於倒出裡頭陳舊污穢的東西；就像娶妾是為了求得子嗣一樣，表面失序，實則另有所得，沒有災咎。",
+    "鼎中裝滿了食物，象徵自身充實、才德兼備，與自己不合的對手雖然心懷嫉妒，卻無法拿自己怎麼樣，吉祥。",
+    "鼎的提耳變形損壞，導致無法順利移動使用，鼎中肥美的野雞肉也因此吃不到；等到雨水一來、鬱悶消散，悔恨終將化解，最終吉祥。",
+    "鼎的腳折斷了，把王公的美食都打翻了，弄得自己滿身狼狽、顏面盡失，凶險。",
+    "鼎有黃色的提耳、金屬的橫槓，象徵居中守正、剛柔相濟，適合堅守正道。",
+    "鼎配上了玉製的橫槓，象徵溫潤而剛強兼具的極致美德，大為吉祥，沒有不利之事。"
+    ]
+  },
+  51: {
+    yao: [
+    "雷聲震動之初心懷恐懼戒慎，過後便能談笑自若，吉祥。",
+    "雷震來襲，處境危險，損失了大量的財物；此時逃到高高的山陵之上，不必急著去追回失物，七天之後自然會失而復得。",
+    "雷震來時驚魂未定、恍恍惚惚，但只要能藉此警醒而付諸行動，就不會有災禍。",
+    "雷震之後陷入泥濘之中，動彈不得——象徵一味沉溺、無法振作。",
+    "雷震反覆來去、處境始終危險，但終究沒有太大的損失，仍有該做的事情要繼續處理。",
+    "雷震之下渾身戰慄、驚恐四顧，此時貿然前進會有凶險；如果雷震還沒直接波及自身、只是波及到鄰居，就還不會有災咎，只是親友之間難免會有些閒言閒語。"
+    ]
+  },
+  52: {
+    yao: [
+    "在剛要邁出腳步時就懂得停止、克制，沒有災咎，適合長久堅守正道。",
+    "只能控制住小腿（局部的克制），卻無法真正拯救、跟上該做的事，內心因此感到不痛快。",
+    "強行控制住腰部的動作，使得脊背的肌肉都被撕裂拉傷，痛苦煎熬得如火燒心一般。",
+    "能夠節制、約束自己整個身心，沒有災咎。",
+    "連說話的口吻、言語都能節制得宜、條理分明，悔恨消失。",
+    "以敦厚篤實的態度徹底做到節制與安定，吉祥。"
+    ]
+  },
+  53: {
+    yao: [
+    "大雁循序漸進地飛到水邊，這對年幼的人來說有些危險，也難免招來些閒言閒語，但沒有災咎。",
+    "大雁飛到磐石之上，安然自得地飲食，吉祥。",
+    "大雁飛到了高處平地，卻像丈夫遠征一去不返、妻子懷孕卻無法順利生養一樣，凶險；此時適合用來抵禦外來的侵擾。",
+    "大雁飛到樹上，原本不適合牠棲息之處，幸而找到平坦的樹枝可以棲身，沒有災咎。",
+    "大雁飛到山陵之上，妻子三年都沒能懷孕，但終究沒有什麼能阻擋這份姻緣，吉祥。",
+    "大雁飛上高遠暢通的雲路，牠的羽毛可以用來裝飾禮儀之物，吉祥。"
+    ]
+  },
+  54: {
+    yao: [
+    "讓妹妹以陪嫁侍妾的身分出嫁，就像跛足的人依然努力前行一樣，堅守本分而行，前進吉祥。",
+    "像獨眼的人依然努力看清事物，適合像幽居守靜之人一樣堅守正道。",
+    "本該以正室身分出嫁，卻反倒淪為陪嫁的侍妾。",
+    "婚嫁的時機延誤了，但遲來的姻緣終究還是會有適合的時候。",
+    "帝乙嫁出妹妹，正室的衣飾反而不如陪嫁侍妾來得華美——象徵謙遜低調、不誇耀身分，就像接近圓滿卻不過分盈滿的月亮一樣，吉祥。",
+    "女子捧著竹筐卻空無一物，男子宰羊卻沒有血流出——象徵徒具形式、名不符實，沒有任何好處。"
+    ]
+  },
+  55: {
+    yao: [
+    "遇到與自己相匹配的對象，即使相處長達十天之久也沒有災咎，前往還能得到嘉許。",
+    "遮蔽物越來越厚重，即使在正午時分也能見到北斗星，象徵光明被嚴重遮蔽，此時前往容易招致猜疑，但只要心懷誠信、坦然表露，吉祥。",
+    "遮蔽得更加濃重，正午時連細小的星光都能看見，就像折斷了自己的右臂一樣，有志難伸，但沒有災咎。",
+    "同樣遮蔽深重、正午如夜，但幸運地遇到了與自己地位相當、志同道合的人，吉祥。",
+    "招攬有文采、有德行的賢能之士前來相助，因而獲得可喜可賀的美名，吉祥。",
+    "把房子蓋得極為宏大，卻反倒遮蔽了自己的家、與外界隔絕；從門縫窺看，裡頭寂靜無人，三年都不見人影，凶險。"
+    ]
+  },
+  56: {
+    yao: [
+    "客居在外的人為瑣碎小事斤斤計較、自貶身分，因而自招災禍。",
+    "客居在外的人找到落腳的住處，還帶著盤纏財物，並得到忠心的童僕相隨，堅守正道，吉祥。",
+    "客居在外的人所住的旅舍遭到焚毀，還失去了跟隨的童僕，即使堅守正道，處境依然危險。",
+    "客居在外的人找到暫時棲身之處，也得到了盤纏與器具，但心裡仍然不太痛快、無法安定。",
+    "射獵野雞時雖然遺失了一支箭，但最終仍憑藉這份本事贏得了美名與嘉獎。",
+    "鳥兒的巢穴被大火燒毀，客居在外的人先是得意大笑，後來卻嚎啕大哭；又在邊境輕易失去了自己的牛，凶險。"
+    ]
+  },
+  57: {
+    yao: [
+    "猶疑不定、進退兩難，適合像武士一樣果決剛毅地堅守正道。",
+    "過度謙卑順從，甚至如伏在床下一般，此時借助祝史巫覡等專業人士反覆溝通、稟明誠意，吉祥，沒有災咎。",
+    "一再勉強、頻繁地表現順從卻缺乏誠意，會有所憾惜。",
+    "悔恨消失，田獵時獲得三種用途的獵物——象徵行事得宜、收穫豐碩。",
+    "堅守正道，吉祥，悔恨消失，沒有不利之事。事情起初或許不順，但終究能有好結果；行事之前三天、之後三天都要仔細謀劃考量，吉祥。",
+    "過度謙卑順從到了極點，就像趴伏在床下一樣，因此失去了賴以自立的財物與器具，即使堅守，也會有凶險。"
+    ]
+  },
+  58: {
+    yao: [
+    "以平和、真誠的心與人相處而心生喜悅，吉祥。",
+    "以誠信與人交心而喜悅，吉祥，悔恨消失。",
+    "一味討好、諂媚別人以博取歡心，凶險。",
+    "反覆商討、猶豫不決而心神不寧，但只要能與邪佞劃清界線、堅守原則，終將迎來喜慶。",
+    "誠心信任了正在侵蝕、敗壞自己的人，親近小人，會有危險。",
+    "引誘、勾引別人來獲取一時的歡愉——這是最淺薄、最不足取的喜悅方式。"
+    ]
+  },
+  59: {
+    yao: [
+    "藉助強健的馬匹來救助、脫離險境，吉祥。",
+    "在渙散離亂之時奔向可以依靠、安歇的憑藉，悔恨消失。",
+    "能夠放下自身的私念、不顧己身地投入救助渙散的局面，沒有悔恨。",
+    "讓原本各自為政、分散的群眾重新凝聚起來，大為吉祥；甚至能聚集如山丘般龐大的力量，這是一般人意想不到的成就。",
+    "像汗水一發不可收拾般，發布重大的號令，讓渙散的人心重新歸附於王者的居所，沒有災咎。",
+    "讓渙散所帶來的傷害、憂懼徹底遠離，沒有災咎。"
+    ]
+  },
+  60: {
+    yao: [
+    "不踏出自家的門庭，沒有災咎。",
+    "明明該有所行動，卻仍不踏出家門，凶險。",
+    "不知節制，就會招致嘆息懊悔，但沒有大災咎。",
+    "安於節制、心甘情願地遵守分寸，亨通。",
+    "把節制當成一件甘之如飴的事，吉祥，前往行事會得到嘉許。",
+    "把節制當成一件痛苦難熬的事，即使堅守也會有凶險，但只要能及時醒悟，悔恨終將消失。"
+    ]
+  },
+  61: {
+    yao: [
+    "安於原本的處境、心無旁騖，吉祥；如果心生別的雜念，就無法安寧。",
+    "仙鶴在樹蔭下鳴叫，牠的孩子也隨聲應和；我有美酒佳釀，願與你一同分享共飲。",
+    "遇上了勢均力敵的對手，時而擊鼓進攻、時而偃旗息鼓，時而悲泣、時而歡唱——心情反覆不定。",
+    "像接近圓滿卻不過分盈滿的月亮一樣，失去了原本相配的馬匹，斷絕舊有的私黨牽絆，沒有災咎。",
+    "以誠信緊密團結身邊的人，沒有災咎。",
+    "像雞鳴般的聲音卻妄想直上雲霄，虛張聲勢、名不符實，即使堅守，也會有凶險。"
+    ]
+  },
+  62: {
+    yao: [
+    "像鳥兒一味往上高飛一樣躁進，凶險。",
+    "越過了祖父，卻遇見了祖母；接觸不到君王，卻遇見了臣子——雖然沒能達成原本的目標，但退而求其次，沒有災咎。",
+    "不能過度提防戒備，否則反而可能遭到跟隨者的暗中傷害，凶險。",
+    "沒有災咎，只要不過度躁進、恰如其分地應對，就能相安無事；但若貿然前進，必須提高警覺，不宜長久固守剛強的作風。",
+    "天空布滿濃雲卻遲遲不下雨，這雲是從我西邊的郊野聚集而來；此時王公只能用帶繩的箭，去獵取躲藏在洞穴中的獵物——象徵力量有限，只能小有斬獲。",
+    "沒有相遇、卻一味躁進超越本分，就像飛鳥高飛遭到獵捕一樣，凶險，這就是所謂咎由自取的災禍。"
+    ]
+  },
+  63: {
+    yao: [
+    "拖住車輪、放緩腳步，即使沾濕了尾巴，也沒有災咎——象徵謹慎、不急躁冒進。",
+    "婦人遺失了車上的頭飾，不必急著去追尋，七天之後自然會失而復得。",
+    "殷高宗出兵征討北方的鬼方部族，耗費三年才終於平定，此時不宜任用德行淺薄的小人。",
+    "華美的衣飾裡藏著破舊的敗絮，表面風光、內裡隱憂，必須終日保持戒備警惕。",
+    "東邊的鄰居宰殺全牛盛大獻祭，反而不如西邊的鄰居用簡薄的祭品虔誠致祭，後者真正得到了福澤——象徵誠心比排場更重要。",
+    "連頭都沾濕了，涉險過深、得意忘形，處境危險。"
+    ]
+  },
+  64: {
+    yao: [
+    "像狐狸沾濕了尾巴一樣，功虧一簣，會有所憾惜。",
+    "拖住車輪、放緩腳步而行，堅守正道，吉祥。",
+    "事情尚未成功，此時貿然前進會有凶險，但仍適合渡過大河、放手一搏。",
+    "堅守正道，吉祥，悔恨消失；奮發振作、出兵征討鬼方，耗費三年之後終於獲得大國的封賞。",
+    "堅守正道，吉祥，沒有悔恨；君子的光輝德行，加上心懷誠信，吉祥。",
+    "心懷誠信、開懷暢飲，本來沒有災咎；但如果因此沉溺過度、把頭都弄濕了，那麼即使原本心懷誠信，也會因此失去分寸、有失妥當。"
+    ]
+  },
+};
+
+const LEGGE_YAO = {
+  1: {
+    yao: [
+    "The dragon lying hid in the deep. It is not the time for active doing.",
+    "The dragon appearing in the field. It will be advantageous to meet with the great man.",
+    "The superior man active and vigilant all the day, and in the evening still careful and apprehensive. The position is dangerous, but there will be no mistake.",
+    "The dragon looking as if he were leaping up, but still in the deep. There will be no mistake.",
+    "The dragon on the wing in the sky. It will be advantageous to meet with the great man.",
+    "The dragon exceeding the proper limits. There will be occasion for repentance."
+    ],
+    yong: "The lines of this hexagram are all strong and undivided, as appears from the use of the number NINE. If the host of dragons thus appearing were to divest themselves of their heads, there would be good fortune."
+  },
+  2: {
+    yao: [
+    "Treading on hoarfrost. The strong ice will come by and by.",
+    "Being straight, square, and great. Its operation, without repeated efforts, will be in every respect advantageous.",
+    "Keeping his excellence under restraint, but firmly maintaining it. If he should have occasion to engage in the king's service, though he will not claim the success for himself, he will bring affairs to a good issue.",
+    "A sack tied up. There will be no ground for blame or for praise.",
+    "The yellow lower garment. There will be great good fortune.",
+    "Dragons fighting in the wild. Their blood is purple and yellow."
+    ],
+    yong: "The lines of this hexagram are all weak and divided, as appears from the use of the number six. If those who are thus represented be perpetually correct and firm, advantage will arise."
+  },
+  3: {
+    yao: [
+    "The difficulty in advancing. It will be advantageous for him to abide correct and firm; advantageous also to be made a feudal ruler.",
+    "One distressed and obliged to return; even the horses of her chariot seem to be retreating. But not by a spoiler is she assailed, but by one who seeks her to be his wife. The young lady maintains her firm correctness, and declines a union. After ten years she will be united, and have children.",
+    "One following the deer without the guidance of the forester, and only finding himself in the midst of the forest. The superior man, acquainted with the secret risks, thinks it better to give up the chase. If he went forward, he would regret it.",
+    "A lady, the horses of whose chariot appear in retreat. She seeks, however, the help of him who seeks her to be his wife. Advance will be fortunate; all will turn out advantageously.",
+    "The difficulties in the way of dispensing the rich favours that might be expected from him. With firmness and correctness there will be good fortune in small things; even with them in great things there will be evil.",
+    "One with the horses of his chariot obliged to retreat, and weeping tears of blood in streams."
+    ]
+  },
+  4: {
+    yao: [
+    "The dispelling of ignorance. It will be advantageous to use punishment for that purpose, and to remove the shackles from the mind. But going on in that way of punishment will give occasion for regret.",
+    "Exercising forbearance with the ignorant, in which there will be good fortune; and admitting even the goodness of women, which will also be fortunate. He may be described also as a son able to sustain the burden of his family.",
+    "One should not marry a woman whose emblem it might be, for that, when she sees a man of wealth, she will not keep her person from him, and in no wise will advantage come from her.",
+    "Bound in chains of ignorance. There will be occasion for regret.",
+    "A simple lad without experience. There will be good fortune.",
+    "One smiting the ignorant youth. But no advantage will come from doing him an injury. Advantage would come from warding off injury from him."
+    ]
+  },
+  5: {
+    yao: [
+    "Waiting in the distant border. It will be well for him constantly to maintain the purpose thus shown, in which case there will be no error.",
+    "Waiting on the sand of the mountain stream. He will suffer the small injury of being spoken against, but in the end there will be good fortune.",
+    "In the mud close by the stream. He thereby invites the approach of injury.",
+    "Waiting in the place of blood. But he will get out of the cavern.",
+    "Waiting amidst the appliances of a feast. Through his firmness and correctness there will be good fortune.",
+    "Entered into the cavern. But there are three guests coming, without being urged, to his help. If he receive them respectfully, there will be good fortune in the end."
+    ]
+  },
+  6: {
+    yao: [
+    "Not perpetuating the matter about which the contention is. He will suffer the small injury of being spoken against, but the end will be fortunate.",
+    "Unequal to the contention. If he retire and keep concealed where the inhabitants of his city are only three hundred families, he will fall into no mistake.",
+    "Keeping in the old place assigned for his support, and firmly correct. Perilous as the position is, there will be good fortune in the end. Should he perchance engage in the king's business, he will not claim the merit of achievement.",
+    "Unequal to the contention. He returns to the study of Heaven's ordinances, changes his wish to contend, and rests in being firm and correct. There will be good fortune.",
+    "Contending — and with great good fortune.",
+    "How its subject may have the leathern belt conferred on him by the sovereign, and thrice it shall be taken from him in a morning."
+    ]
+  },
+  7: {
+    yao: [
+    "The host going forth according to the rules for such a movement. If these be not good, there will be evil.",
+    "The leader in the midst of the host. There will be good fortune and no error. The king has thrice conveyed to him the orders of his favour.",
+    "How the host may, possibly, have many inefficient leaders. There will be evil.",
+    "The host in retreat. There is no error.",
+    "Birds in the fields, which it will be advantageous to seize and destroy. In that case there will be no error. If the oldest son leads the host, and younger men idly occupy offices assigned to them, however firm and correct he may be, there will be evil.",
+    "The great ruler delivering his charges, appointing some to be rulers of states, and others to undertake the headship of clans; but small men should not be employed in such positions."
+    ]
+  },
+  8: {
+    yao: [
+    "Seeking by his sincerity to win the attachment of his object. There will be no error. Let the breast be full of sincerity as an earthenware vessel is of its contents, and it will in the end bring other advantages.",
+    "The movement towards union and attachment proceeding from the inward mind. With firm correctness there will be good fortune.",
+    "Seeking for union with such as ought not to be associated with.",
+    "Seeking for union with the one beyond himself. With firm correctness there will be good fortune.",
+    "The most illustrious instance of seeking union and attachment. We seem to see in it the king urging his pursuit of the game only in three directions, and allowing the escape of all the animals before him, while the people of his towns do not warn one another to prevent it. There will be good fortune.",
+    "One seeking union and attachment without having taken the first step to such an end. There will be evil."
+    ]
+  },
+  9: {
+    yao: [
+    "Returning and pursuing his own course. What mistake should he fall into? There will be good fortune.",
+    "By the attraction of the former line, returning to the proper course. There will be good fortune.",
+    "The idea of a carriage, the strap beneath which has been removed, or of a husband and wife looking on each other with averted eyes.",
+    "Possessed of sincerity. The danger of bloodshed is thereby averted, and his ground for apprehension dismissed. There will be no mistake.",
+    "Possessed of sincerity, and drawing others to unite with him. Rich in resources, he employs his neighbours in the same cause with himself.",
+    "How the rain has fallen, and the onward progress is stayed — so must we value the full accumulation of the virtue represented by the upper trigram. But a wife exercising restraint, however firm and correct she may be, is in a position of peril, and like the moon approaching to the full. If the superior man prosecute his measures in such circumstances, there will be evil."
+    ]
+  },
+  10: {
+    yao: [
+    "Treading his accustomed path. If he go forward, there will be no error.",
+    "Treading the path that is level and easy — a quiet and solitary man, to whom, if he be firm and correct, there will be good fortune.",
+    "A one-eyed man who thinks he can see; a lame man who thinks he can walk well; one who treads on the tail of a tiger and is bitten. All this indicates ill fortune. We have a mere bravo acting the part of a great ruler.",
+    "Treading on the tail of a tiger. He becomes full of apprehensive caution, and in the end there will be good fortune.",
+    "The resolute tread of its subject. Though he be firm and correct, there will be peril.",
+    "To look at the whole course that is trodden, and examine the presage which that gives. If it be complete and without failure, there will be great good fortune."
+    ]
+  },
+  11: {
+    yao: [
+    "Grass pulled up, and bringing with it other stalks with whose roots it is connected. Advance on the part of its subject will be fortunate.",
+    "One who can bear with the uncultivated, will cross the Ho without a boat, does not forget the distant, and has no selfish friendships. Thus does he prove himself acting in accordance with the course of the due Mean.",
+    "While there is no state of peace that is not liable to be disturbed, and no departure of evil men so that they shall not return, yet when one is firm and correct, as he realises the distresses that may arise, he will commit no error. There is no occasion for sadness at the certainty of such recurring changes; and in this mood the happiness of the present may be long enjoyed.",
+    "Fluttering down — not relying on his own rich resources, but calling in his neighbours. They all come not as having received warning, but in the sincerity of their hearts.",
+    "King Tî-yî's rule about the marriage of his younger sister. By such a course there is happiness and there will be great good fortune.",
+    "The city wall returned into the moat. It is not the time to use the army. The subject of the line may, indeed, announce his orders to the people of his own city; but however correct and firm he may be, he will have cause for regret."
+    ]
+  },
+  12: {
+    yao: [
+    "Grass pulled up, and bringing with it other stalks with whose roots it is connected. With firm correctness on the part of its subject, there will be good fortune and progress.",
+    "Its subject patient and obedient. To the small man comporting himself so there will be good fortune. If the great man comport himself as the distress and obstruction require, he will have success.",
+    "Its subject ashamed of the purpose folded in his breast.",
+    "Its subject acting in accordance with the ordination of Heaven, and committing no error. His companions will come and share in his happiness.",
+    "Him who brings the distress and obstruction to a close — the great man and fortunate. But let him say, 'We may perish! We may perish!' so shall the state of things become firm, as if bound to a clump of bushy mulberry trees.",
+    "The overthrow and removal of the condition of distress and obstruction. Before this there was that condition. Hereafter there will be joy."
+    ]
+  },
+  13: {
+    yao: [
+    "The union of men just issuing from his gate. There will be no error.",
+    "The union of men in relation with his kindred. There will be occasion for regret.",
+    "His arms hidden in the thick grass, and at the top of a high mound. But for three years he makes no demonstration.",
+    "Mounted on the city wall; but he does not proceed to make the attack he contemplates. There will be good fortune.",
+    "The union of men first wails and cries out, and then laughs. His great host conquers, and he and the subject of the second line meet together.",
+    "The union of men in the suburbs. There will be no occasion for repentance."
+    ]
+  },
+  14: {
+    yao: [
+    "No approach to what is injurious, and there is no error. Let there be a realisation of the difficulty and danger of the position, and there will be no error to the end.",
+    "A large waggon with its load. In whatever direction advance is made, there will be no error.",
+    "A feudal prince presenting his offerings to the Son of Heaven. A small man would be unequal to such a duty.",
+    "Its subject keeping his great resources under restraint. There will be no error.",
+    "The sincerity of its subject reciprocated by that of all the others represented in the hexagram. Let him display a proper majesty, and there will be good fortune.",
+    "Its subject with help accorded to him from Heaven. There will be good fortune, advantage in every respect."
+    ]
+  },
+  15: {
+    yao: [
+    "The superior man who adds humility to humility. Even the great stream may be crossed with this, and there will be good fortune.",
+    "Humility that has made itself recognised. With firm correctness there will be good fortune.",
+    "The superior man of acknowledged merit. He will maintain his success to the end, and have good fortune.",
+    "One, whose action would be in every way advantageous, stirring up the more his humility.",
+    "One who, without being rich, is able to employ his neighbours. He may advantageously use the force of arms. All his movements will be advantageous.",
+    "Humility that has made itself recognised. The subject of it will with advantage put his hosts in motion; but he will only punish his own towns and state."
+    ]
+  },
+  16: {
+    yao: [
+    "Its subject proclaiming his pleasure and satisfaction. There will be evil.",
+    "One who is firm as a rock. He sees a thing without waiting till it has come to pass; with his firm correctness there will be good fortune.",
+    "One looking up for favours, while he indulges the feeling of pleasure and satisfaction. If he would understand! If he be late in doing so, there will indeed be occasion for repentance.",
+    "Him from whom the harmony and satisfaction come. Great is the success which he obtains. Let him not allow suspicions to enter his mind, and thus friends will gather around him.",
+    "One with a chronic complaint, but who lives on without dying.",
+    "Its subject with darkened mind devoted to the pleasure and satisfaction of the time; but if he change his course even when it may be considered as completed, there will be no error."
+    ]
+  },
+  17: {
+    yao: [
+    "One changing the object of his pursuit; but if he be firm and correct, there will be good fortune. Going beyond his own gate to find associates, he will achieve merit.",
+    "One who cleaves to the little boy, and lets go the man of age and experience.",
+    "One who cleaves to the man of age and experience, and lets go the little boy. Such following will get what it seeks; but it will be advantageous to adhere to what is firm and correct.",
+    "One followed and obtaining adherents. Though he be firm and correct, there will be evil. If he be sincere however in his course, and make that evident, into what error will he fall?",
+    "The ruler sincere in fostering all that is excellent. There will be good fortune.",
+    "That sincerity firmly held and clung to, yea, and bound fast. We see the king with it presenting his offerings on the western mountain."
+    ]
+  },
+  18: {
+    yao: [
+    "A son dealing with the troubles caused by his father. If he be an able son, the father will escape the blame of having erred. The position is perilous, but there will be good fortune in the end.",
+    "A son dealing with the troubles caused by his mother. He should not carry his firm correctness to the utmost.",
+    "A son dealing with the troubles caused by his father. There may be some small occasion for repentance, but there will not be any great error.",
+    "A son viewing indulgently the troubles caused by his father. If he go forward, he will find cause to regret it.",
+    "A son dealing with the troubles caused by his father. He obtains the praise of using the fit instrument for his work.",
+    "One who does not serve either king or feudal lord, but in a lofty spirit prefers to attend to his own affairs."
+    ]
+  },
+  19: {
+    yao: [
+    "Its subject advancing in company with the subject of the second line. Through his firm correctness there will be good fortune.",
+    "Its subject advancing in company with the subject of the first line. There will be good fortune; advancing will be in every way advantageous.",
+    "One well pleased indeed to advance, but whose action will be in no way advantageous. If he become anxious about it however, there will be no error.",
+    "One advancing in the highest mode. There will be no error.",
+    "The advance of wisdom, such as befits the great ruler. There will be good fortune.",
+    "The advance of honesty and generosity. There will be good fortune, and no error."
+    ]
+  },
+  20: {
+    yao: [
+    "The looking of a lad — not blamable in men of inferior rank, but matter for regret in superior men.",
+    "One peeping out from a door. It would be advantageous if it were merely the firm correctness of a female.",
+    "One looking at the course of his own life, to advance or recede accordingly.",
+    "One contemplating the glory of the kingdom. It will be advantageous for him, being such as he is, to seek to be a guest of the king.",
+    "Its subject contemplating his own life-course. A superior man, he will thus fall into no error.",
+    "Its subject contemplating his character to see if it be indeed that of a superior man. He will not fall into error."
+    ]
+  },
+  21: {
+    yao: [
+    "One with his feet in the stocks and deprived of his toes. There will be no error.",
+    "One biting through the soft flesh, and going on to bite off the nose. There will be no error.",
+    "One gnawing dried flesh, and meeting with what is disagreeable. There will be occasion for some small regret, but no great error.",
+    "One gnawing the flesh dried on the bone, and getting the pledges of money and arrows. It will be advantageous to him to realise the difficulty of his task and be firm — in which case there will be good fortune.",
+    "One gnawing at dried flesh, and finding the yellow gold. Let him be firm and correct, realising the peril of his position. There will be no error.",
+    "One wearing the cangue, and deprived of his ears. There will be evil."
+    ]
+  },
+  22: {
+    yao: [
+    "One adorning the way of his feet. He can discard a carriage and walk on foot.",
+    "One adorning his beard.",
+    "Its subject with the appearance of being adorned and bedewed with rich favours. But let him ever maintain his firm correctness, and there will be good fortune.",
+    "One looking as if adorned, but only in white. As if mounted on a white horse, and furnished with wings, he seeks union with the subject of the first line, while the intervening third pursues, not as a robber, but intent on a matrimonial alliance.",
+    "Its subject adorned by the occupants of the heights and gardens. He bears his roll of silk, small and slight. He may appear stingy; but there will be good fortune in the end.",
+    "One with white as his only ornament. There will be no error."
+    ]
+  },
+  23: {
+    yao: [
+    "One overturning the couch by injuring its legs. The injury will go on to the destruction of all firm correctness, and there will be evil.",
+    "One overthrowing the couch by injuring its frame. The injury will go on to the destruction of all firm correctness, and there will be evil.",
+    "Its subject among the overthrowers; but there will be no error.",
+    "Its subject having overthrown the couch, and going to injure the skin of him who lies on it. There will be evil.",
+    "Its subject leading on the others like a string of fishes, and obtaining for them the favour that lights on the inmates of the palace. There will be advantage in every way.",
+    "Its subject as a great fruit which has not been eaten. The superior man finds the people again as a chariot carrying him. The small men by their course overthrow their own dwellings."
+    ]
+  },
+  24: {
+    yao: [
+    "Its subject returning from an error of no great extent, which would not proceed to anything requiring repentance. There will be great good fortune.",
+    "The admirable return of its subject. There will be good fortune.",
+    "One who has made repeated returns. The position is perilous, but there will be no error.",
+    "Its subject moving right in the centre among those represented by the other divided lines, and yet returning alone to his proper path.",
+    "The noble return of its subject. There will be no ground for repentance.",
+    "Its subject all astray on the subject of returning. There will be evil. There will be calamities and errors. If with his views he put the hosts in motion, the end will be a great defeat, whose issues will extend to the ruler of the state. Even in ten years he will not be able to repair the disaster."
+    ]
+  },
+  25: {
+    yao: [
+    "Its subject free from all insincerity. His advance will be accompanied with good fortune.",
+    "One who reaps without having ploughed that he might reap, and gathers the produce of his third year's fields without having cultivated them the first year for that end. To such a one there will be advantage in whatever direction he may move.",
+    "Calamity happening to one who is free from insincerity — as in the case of an ox that has been tied up. A passer by finds it and carries it off, while the people in the neighbourhood have the calamity of being accused and apprehended.",
+    "A case in which, if its subject can remain firm and correct, there will be no error.",
+    "One who is free from insincerity, and yet has fallen ill. Let him not use medicine, and he will have occasion for joy in his recovery.",
+    "Its subject free from insincerity, yet sure to fall into error, if he take action. His action will not be advantageous in any way."
+    ]
+  },
+  26: {
+    yao: [
+    "Its subject in a position of peril. It will be advantageous for him to stop his advance.",
+    "A carriage with the strap under it removed.",
+    "Its subject urging his way with good horses. It will be advantageous for him to realise the difficulty of his course, and to be firm and correct, exercising himself daily in his charioteering and methods of defence; then there will be advantage in whatever direction he may advance.",
+    "The young bull, and yet having the piece of wood over his horns. There will be great good fortune.",
+    "The teeth of a castrated hog. There will be good fortune.",
+    "Its subject as in command of the firmament of heaven. There will be progress."
+    ]
+  },
+  27: {
+    yao: [
+    "'You leave your efficacious tortoise, and look at me till your lower jaw hangs down.' There will be evil.",
+    "One looking downwards for nourishment, which is contrary to what is proper; or seeking it from the height above, advance towards which will lead to evil.",
+    "One acting contrary to the method of nourishing. However firm he may be, there will be evil. For ten years let him not take any action, for it will not be in any way advantageous.",
+    "One looking downwards for the power to nourish. There will be good fortune. Looking with a tiger's downward unwavering glare, and with his desire that impels him to spring after spring, he will fall into no error.",
+    "One acting contrary to what is regular and proper; but if he abide in firmness, there will be good fortune. He should not, however, try to cross the great stream.",
+    "Him from whom comes the nourishing. His position is perilous, but there will be good fortune. It will be advantageous to cross the great stream."
+    ]
+  },
+  28: {
+    yao: [
+    "One placing mats of the white mâo grass under things set on the ground. There will be no error.",
+    "A decayed willow producing shoots, or an old husband in possession of his young wife. There will be advantage in every way.",
+    "A beam that is weak. There will be evil.",
+    "A beam curving upwards. There will be good fortune. If the subject of it looks for other help but that of line one, there will be cause for regret.",
+    "A decayed willow producing flowers, or an old wife in possession of her young husband. There will be occasion neither for blame nor for praise.",
+    "Its subject with extraordinary boldness wading through a stream, till the water hides the crown of his head. There will be evil, but no ground for blame."
+    ]
+  },
+  29: {
+    yao: [
+    "Its subject in the double defile, and yet entering a cavern within it. There will be evil.",
+    "Its subject in all the peril of the defile. He will, however, get a little of the deliverance that he seeks.",
+    "Its subject, whether he comes or goes, confronted by a defile. All is peril to him and unrest. His endeavours will lead him into the cavern of the pit. There should be no action in such a case.",
+    "Its subject at a feast, with simply a bottle of spirits, and a subsidiary basket of rice, while the cups and bowls are only of earthenware. He introduces his important lessons as his ruler's intelligence admits. There will in the end be no error.",
+    "The water of the defile not yet full, so that it might flow away; but order will soon be brought about. There will be no error.",
+    "Its subject bound with cords of three strands or two strands, and placed in the thicket of thorns. But in three years he does not learn the course for him to pursue. There will be evil."
+    ]
+  },
+  30: {
+    yao: [
+    "One ready to move with confused steps. But he treads at the same time reverently, and there will be no mistake.",
+    "Its subject in his place in yellow. There will be great good fortune.",
+    "Its subject in a position like that of the declining sun. Instead of playing on his instrument of earthenware, and singing to it, he utters the groans of an old man of eighty. There will be evil.",
+    "The manner of its subject's coming. How abrupt it is, as with fire, with death, to be rejected by all!",
+    "Its subject as one with tears flowing in torrents, and groaning in sorrow. There will be good fortune.",
+    "The king employing its subject in his punitive expeditions. Achieving admirable merit, he breaks only the chiefs of the rebels. Where his prisoners were not their associates, he does not punish. There will be no error."
+    ]
+  },
+  31: {
+    yao: [
+    "One moving his great toes.",
+    "One moving the calves of his leg. There will be evil. If he abide quiet in his place, there will be good fortune.",
+    "One moving his thighs, and keeping close hold of those whom he follows. Going forward in this way will cause regret.",
+    "Firm correctness which will lead to good fortune, and prevent all occasion for repentance. If its subject be unsettled in his movements, only his friends will follow his purpose.",
+    "One moving the flesh along the spine above the heart. There will be no occasion for repentance.",
+    "One moving his jaws and tongue."
+    ]
+  },
+  32: {
+    yao: [
+    "Its subject deeply desirous of long continuance. Even with firm correctness there will be evil; there will be no advantage in any way.",
+    "All occasion for repentance disappearing.",
+    "One who does not continuously maintain his virtue. There are those who will impute this to him as a disgrace. However firm he may be, there will be ground for regret.",
+    "A field where there is no game.",
+    "Its subject continuously maintaining the virtue indicated by it. In a wife this will be fortunate; in a husband, evil.",
+    "Its subject exciting himself to long continuance. There will be evil."
+    ]
+  },
+  33: {
+    yao: [
+    "A retiring tail. The position is perilous. No movement in any direction should be made.",
+    "Its subject holding his purpose fast as if by a thong made from the hide of a yellow ox, which cannot be broken.",
+    "One retiring but bound — to his distress and peril. If he were to deal with his binders as in nourishing a servant or concubine, it would be fortunate for him.",
+    "Its subject retiring notwithstanding his likings. In a superior man this will lead to good fortune; a small man cannot attain to this.",
+    "Its subject retiring in an admirable way. With firm correctness there will be good fortune.",
+    "Its subject retiring in a noble way. It will be advantageous in every respect."
+    ]
+  },
+  34: {
+    yao: [
+    "Its subject manifesting his strength in his toes. But advance will lead to evil — most certainly.",
+    "With firm correctness there will be good fortune.",
+    "In the case of a small man, one using all his strength; and in the case of a superior man, one whose rule is not to do so. Even with firm correctness the position would be perilous. The exercise of strength in it might be compared to the case of a ram butting against a fence, and getting his horns entangled.",
+    "Firm correctness leads to good fortune, and occasion for repentance disappears. We see the fence opened without the horns being entangled. The strength is like that in the wheel-spokes of a large waggon.",
+    "One who loses his ram-like strength in the ease of his position. But there will be no occasion for repentance.",
+    "One who may be compared to the ram butting against the fence, and unable either to retreat, or to advance as he would fain do. There will not be advantage in any respect; but if he realise the difficulty of his position, there will be good fortune."
+    ]
+  },
+  35: {
+    yao: [
+    "One wishing to advance, and at the same time kept back. Let him be firm and correct, and there will be good fortune. If trust be not reposed in him, let him maintain a large and generous mind, and there will be no error.",
+    "Its subject with the appearance of advancing, and yet of being sorrowful. If he be firm and correct, there will be good fortune. He will receive this great blessing from his grandmother.",
+    "Its subject trusted by all around him. All occasion for repentance will disappear.",
+    "Its subject with the appearance of advancing, but like a marmot. However firm and correct he may be, the position is one of peril.",
+    "How all occasion for repentance disappears from its subject. But let him not concern himself about whether he shall fail or succeed. To advance will be fortunate, and in every way advantageous.",
+    "One advancing his horns. But he only uses them to punish the rebellious people of his own city. The position is perilous, but there will be good fortune. Yet however firm and correct he may be, there will be occasion for regret."
+    ]
+  },
+  36: {
+    yao: [
+    "Its subject flying, but with drooping wings. When the superior man is revolving his going away, he may be for three days without eating. Wherever he goes, the people there may speak derisively of him.",
+    "Its subject wounded in the left thigh. He saves himself by the strength of a swift horse; and is fortunate.",
+    "Its subject hunting in the south, and taking the great chief of the darkness. He should not be eager to make all correct at once.",
+    "Its subject just entered into the left side of the belly of the dark land. But he is able to carry out the mind appropriate in the condition indicated, quitting the gate and courtyard of the lord of darkness.",
+    "How the count of Kî fulfilled the condition indicated. It will be advantageous to be firm and correct.",
+    "The case where there is no light, but only obscurity. Its subject had at first ascended to the top of the sky; his future shall be to go into the earth."
+    ]
+  },
+  37: {
+    yao: [
+    "Its subject establishing restrictive regulations in his household. Occasion for repentance will disappear.",
+    "Its subject taking nothing on herself, but in her central place attending to the preparation of the food. Through her firm correctness there will be good fortune.",
+    "Its subject treating the members of the household with stern severity. There will be occasion for repentance, there will be peril, but there will also be good fortune. If the wife and children were to be smirking and chattering, in the end there would be occasion for regret.",
+    "Its subject enriching the family. There will be great good fortune.",
+    "The influence of the king extending to his family. There need be no anxiety; there will be good fortune.",
+    "Its subject possessed of sincerity and arrayed in majesty. In the end there will be good fortune."
+    ]
+  },
+  38: {
+    yao: [
+    "Occasion for repentance will disappear. He has lost his horses, but let him not seek for them — they will return of themselves. Should he meet with bad men, he will not err in communicating with them.",
+    "Its subject happening to meet with his lord in a bye-passage. There will be no error.",
+    "One whose carriage is dragged back, while the oxen in it are pushed back, and he is himself subjected to the shaving of his head and the cutting off of his nose. There is no good beginning, but there will be a good end.",
+    "Its subject solitary amidst the prevailing disunion. But he meets with the good man, and they blend their sincere desires together. The position is one of peril, but there will be no mistake.",
+    "Occasion for repentance will disappear. With his relative and minister he unites closely and readily as if he were biting through a piece of skin. When he goes forward with this help, what error can there be?",
+    "Its subject solitary amidst the prevailing disunion. He seems to see a pig bearing on its back a load of mud, or fancies there is a carriage full of ghosts. He first bends his bow against him, and afterwards unbends it, for he discovers that he is not an assailant to injure, but a near relative. Going forward, he shall meet with genial rain, and there will be good fortune."
+    ]
+  },
+  39: {
+    yao: [
+    "Advance on the part of its subject will lead to greater difficulties, while remaining stationary will afford ground for praise.",
+    "The minister of the king struggling with difficulty on difficulty, and not with a view to his own advantage.",
+    "Its subject advancing, but only to greater difficulties. He remains stationary, and returns to his former associates.",
+    "Its subject advancing, but only to greater difficulties. He remains stationary, and unites with the subject of the line above.",
+    "Its subject struggling with the greatest difficulties, while friends are coming to help him.",
+    "Its subject going forward, only to increase the difficulties, while his remaining stationary will be productive of great merit. There will be good fortune, and it will be advantageous to meet with the great man."
+    ]
+  },
+  40: {
+    yao: [
+    "Its subject will commit no error.",
+    "Its subject catch, in hunting, three foxes, and obtain the yellow (golden) arrows. With firm correctness there will be good fortune.",
+    "A porter with his burden, yet riding in a carriage. He will only tempt robbers to attack him. However firm and correct he may try to be, there will be cause for regret.",
+    "'Remove your toes. Friends will then come, between you and whom there will be mutual confidence.'",
+    "Its subject, the superior man (the ruler), executing his function of removing whatever is injurious to the idea of the hexagram, in which case there will be good fortune, and confidence in him will be shown even by the small men.",
+    "A feudal prince with his bow shooting at a falcon on the top of a high wall, and hitting it. The effect of his action will be in every way advantageous."
+    ]
+  },
+  41: {
+    yao: [
+    "Its subject suspending his own affairs, and hurrying away to help the subject of the fourth line. He will commit no error, but let him consider how far he should contribute of what is his for the other.",
+    "It will be advantageous for its subject to maintain a firm correctness, and that action on his part will be evil. He can give increase to his correlate without taking from himself.",
+    "How of three men walking together, the number is diminished by one; and how one, walking, finds his friend.",
+    "Its subject diminishing the ailment under which he labours by making the subject of the first line hasten to his help, and make him glad. There will be no error.",
+    "Parties adding to the stores of its subject ten pairs of tortoise shells, and accepting no refusal. There will be great good fortune.",
+    "Its subject giving increase to others without taking from himself. There will be no error. With firm correctness there will be good fortune. There will be advantage in every movement that shall be made. He will find ministers more than can be counted by their clans."
+    ]
+  },
+  42: {
+    yao: [
+    "It will be advantageous for its subject in his position to make a great movement. If it be greatly fortunate, no blame will be imputed to him.",
+    "Parties adding to the stores of its subject ten pairs of tortoise shells whose oracles cannot be opposed. Let him persevere in being firm and correct, and there will be good fortune. Let the king, having the virtues thus distinguished, employ them in presenting his offerings to God, and there will be good fortune.",
+    "Increase given to its subject by means of what is evil, so that he shall be led to good, and be without blame. Let him be sincere and pursue the path of the Mean, so shall he secure the recognition of the ruler, like an officer who announces himself to his prince by the symbol of his rank.",
+    "Its subject pursuing the due course. His advice to his prince is followed. He can with advantage be relied on in such a movement as that of removing the capital.",
+    "Its subject with sincere heart seeking to benefit all below. There need be no question about it; the result will be great good fortune. All below will with sincere heart acknowledge his goodness.",
+    "One to whose increase none will contribute, while many will seek to assail him. He observes no regular rule in the ordering of his heart. There will be evil."
+    ]
+  },
+  43: {
+    yao: [
+    "Its subject in the pride of strength advancing with his toes. He goes forward, but will not succeed. There will be ground for blame.",
+    "Its subject full of apprehension and appealing for sympathy and help. Late at night hostile measures may be taken against him, but he need not be anxious about them.",
+    "Its subject about to advance with strong and determined looks. There will be evil. But the superior man, bent on cutting off the criminal, will walk alone and encounter the rain, till he be hated by his proper associates as if he were contaminated by the others. In the end there will be no blame against him.",
+    "One from whose buttocks the skin has been stripped, and who walks slowly and with difficulty. If he could act like a sheep led after its companions, occasion for repentance would disappear. But though he hear these words, he will not believe them.",
+    "The small men like a bed of purslain, which ought to be uprooted with the utmost determination. The subject of the line having such determination, his action, in harmony with his central position, will lead to no error or blame.",
+    "Its subject without any helpers on whom to call. His end will be evil."
+    ]
+  },
+  44: {
+    yao: [
+    "Its subject should be kept like a carriage tied and fastened to a metal drag, in which case with firm correctness there will be good fortune. But if he move in any direction, evil will appear. He will be like a lean pig, which is sure to keep jumping about.",
+    "Its subject with a wallet of fish. There will be no error. But it will not be well to let the subject of the first line go forward to the guests.",
+    "One from whose buttocks the skin has been stripped so that he walks with difficulty. The position is perilous, but there will be no great error.",
+    "Its subject with his wallet, but no fish in it. This will give rise to evil.",
+    "Its subject as a medlar tree overspreading the gourd beneath it. If he keep his brilliant qualities concealed, a good issue will descend as from Heaven.",
+    "Its subject receiving others on his horns. There will be occasion for regret, but there will be no error."
+    ]
+  },
+  45: {
+    yao: [
+    "Its subject with a sincere desire for union, but unable to carry it out, so that disorder is brought into the sphere of his union. If he cry out for help to his proper correlate, all at once his tears will give place to smiles. He need not mind the temporary difficulty; as he goes forward, there will be no error.",
+    "Its subject led forward by his correlate. There will be good fortune, and freedom from error. There is entire sincerity, and in that case even the small offerings of the vernal sacrifice are acceptable.",
+    "Its subject striving after union and seeming to sigh, yet nowhere finding any advantage. If he go forward, he will not err, though there may be some small cause for regret.",
+    "Its subject in such a state that, if he be greatly fortunate, he will receive no blame.",
+    "The union of all under its subject in the place of dignity. There will be no error. If any do not have confidence in him, let him see to it that his virtue be great, long-continued, and firmly correct, and all occasion for repentance will disappear.",
+    "Its subject sighing and weeping; but there will be no error."
+    ]
+  },
+  46: {
+    yao: [
+    "Its subject advancing upwards with the welcome of those above him. There will be great good fortune.",
+    "Its subject with that sincerity which will make even the small offerings of the vernal sacrifice acceptable. There will be no error.",
+    "Its subject ascending upwards as into an empty city.",
+    "Its subject employed by the king to present his offerings on mount Khî. There will be good fortune; there will be no mistake.",
+    "Its subject firmly correct, and therefore enjoying good fortune. He ascends the stairs with all due ceremony.",
+    "Its subject advancing upwards blindly. Advantage will be found in a ceaseless maintenance of firm correctness."
+    ]
+  },
+  47: {
+    yao: [
+    "Its subject with bare buttocks straitened under the stump of a tree. He enters a dark valley, and for three years has no prospect of deliverance.",
+    "Its subject straitened amidst his wine and viands. There come to him anon the red knee-covers of the ruler. It will be well for him to maintain his sincerity as in sacrificing. Active operations on his part will lead to evil, but he will be free from blame.",
+    "Its subject straitened before a frowning rock. He lays hold of thorns. He enters his palace, and does not see his wife. There will be evil.",
+    "Its subject proceeding very slowly to help the subject of the first line, who is straitened by the carriage adorned with metal in front of him. There will be occasion for regret, but the end will be good.",
+    "Its subject with his nose and feet cut off. He is straitened by his ministers in their scarlet aprons. He is leisurely in his movements, however, and is satisfied. It will be well for him to be as sincere as in sacrificing to spiritual beings.",
+    "Its subject straitened, as if bound with creepers; or in a high and dangerous position, and saying to himself, 'If I move, I shall repent it.' If he do repent of former errors, there will be good fortune in his going forward."
+    ]
+  },
+  48: {
+    yao: [
+    "A well so muddy that men will not drink of it; or an old well to which neither birds nor other creatures resort.",
+    "A well from which by a hole the water escapes and flows away to the shrimps and such small creatures among the grass, or one the water of which leaks away from a broken basket.",
+    "A well, which has been cleared out, but is not used. Our hearts are sorry for this, for the water might be drawn out and used. If the king were only intelligent, both he and we might receive the benefit of it.",
+    "A well, the lining of which is well laid. There will be no error.",
+    "A clear, limpid well, the waters from whose cold spring are freely drunk.",
+    "The water from the well brought to the top, which is not allowed to be covered. This suggests the idea of sincerity. There will be great good fortune."
+    ]
+  },
+  49: {
+    yao: [
+    "Its subject as if he were bound with the skin of a yellow ox.",
+    "Its subject making his changes after some time has passed. Action taken will be fortunate. There will be no error.",
+    "Action taken by its subject will be evil. Though he be firm and correct, his position is perilous. If the change he contemplates have been three times fully discussed, he will be believed in.",
+    "Occasion for repentance disappearing from its subject. Let him be believed in; and though he change existing ordinances, there will be good fortune.",
+    "The great man producing his changes as the tiger does when he changes his stripes. Before he divines and proceeds to action, faith has been reposed in him.",
+    "The superior man producing his changes as the leopard does when he changes his spots, while small men change their faces and show their obedience. To go forward now would lead to evil, but there will be good fortune in abiding firm and correct."
+    ]
+  },
+  50: {
+    yao: [
+    "The caldron overthrown and its feet turned up. But there will be advantage in its getting rid of what was bad in it. Or it shows us the concubine whose position is improved by means of her son. There will be no error.",
+    "The caldron with the things to be cooked in it. If its subject can say, 'My enemy dislikes me, but he cannot approach me,' there will be good fortune.",
+    "The caldron with the places of its ears changed. The progress of its subject is thus stopped. The fat flesh of the pheasant which is in the caldron will not be eaten. But the genial rain will come, and the grounds for repentance will disappear. There will be good fortune in the end.",
+    "The caldron with its feet broken; and its contents, designed for the ruler's use, overturned and spilt. Its subject will be made to blush for shame. There will be evil.",
+    "The caldron with yellow ears and rings of metal in them. There will be advantage through being firm and correct.",
+    "The caldron with rings of jade. There will be great good fortune, and all action taken will be in every way advantageous."
+    ]
+  },
+  51: {
+    yao: [
+    "Its subject, when the movement approaches, looking out and around with apprehension, and afterwards smiling and talking cheerfully. There will be good fortune.",
+    "Its subject, when the movement approaches, in a position of peril. He judges it better to let go the articles in his possession, and to ascend a very lofty height. There is no occasion for him to pursue after the things he has let go; in seven days he will find them.",
+    "Its subject distraught amid the startling movements going on. If those movements excite him to right action, there will be no mistake.",
+    "Its subject, amid the startling movements, supinely sinking deeper in the mud.",
+    "Its subject going and coming amidst the startling movements of the time, and always in peril; but perhaps he will not incur loss, and find business which he can accomplish.",
+    "Its subject, amidst the startling movements of the time, in breathless dismay and looking round him with trembling apprehension. If he take action, there will be evil. If, while the startling movements have not reached his own person and his neighbourhood, he were to take precautions, there would be no error, though his relatives might still speak against him."
+    ]
+  },
+  52: {
+    yao: [
+    "Its subject keeping his toes at rest. There will be no error; but it will be advantageous for him to be persistently firm and correct.",
+    "Its subject keeping the calves of his legs at rest. He cannot help the subject of the line above whom he follows, and is dissatisfied in his mind.",
+    "Its subject keeping his loins at rest, and separating the ribs from the body below. The situation is perilous, and the heart glows with suppressed excitement.",
+    "Its subject keeping his trunk at rest. There will be no error.",
+    "Its subject keeping his jawbones at rest, so that his words are all orderly. Occasion for repentance will disappear.",
+    "Its subject devotedly maintaining his restfulness. There will be good fortune."
+    ]
+  },
+  53: {
+    yao: [
+    "The wild geese gradually approaching the shore. A young officer in similar circumstances will be in a position of danger, and be spoken against; but there will be no error.",
+    "The geese gradually approaching the large rocks, where they eat and drink joyfully and at ease. There will be good fortune.",
+    "Them gradually advanced to the dry plains. It suggests also the idea of a husband who goes on an expedition from which he does not return, and of a wife who is pregnant, but will not nourish her child. There will be evil. The case symbolised might be advantageous in resisting plunderers.",
+    "The geese gradually advanced to the trees. They may light on the flat branches. There will be no error.",
+    "The geese gradually advanced to the high mound. It suggests the idea of a wife who for three years does not become pregnant; but in the end the natural issue cannot be prevented. There will be good fortune.",
+    "The geese gradually advanced to the large heights beyond. Their feathers can be used as ornaments. There will be good fortune."
+    ]
+  },
+  54: {
+    yao: [
+    "The younger sister married off in a position ancillary to the real wife. It suggests the idea of a person lame on one leg who yet manages to tramp along. Going forward will be fortunate.",
+    "Her blind of one eye, and yet able to see. There will be advantage in her maintaining the firm correctness of a solitary widow.",
+    "The younger sister who was to be married off in a mean position. She returns and accepts an ancillary position.",
+    "The younger sister who is to be married off protracting the time. She may be late in being married, but the time will come.",
+    "The marrying of the younger sister of king Tî-yî, when the sleeves of the princess were not equal to those of the still younger sister who accompanied her in an inferior capacity. The case suggests the thought of the moon almost full. There will be good fortune.",
+    "The young lady bearing the basket, but without anything in it, and the gentleman slaughtering the sheep, but without blood flowing from it. There will be no advantage in any way."
+    ]
+  },
+  55: {
+    yao: [
+    "Its subject meeting with his mate. Though they are both of the same character, there will be no error. Advance will call forth approval.",
+    "Its subject surrounded by screens so large and thick that at midday he can see from them the constellation of the Bushel. If he go and try to enlighten his ruler who is thus emblemed, he will make himself to be viewed with suspicion and dislike. Let him cherish his feeling of sincere devotion that he may thereby move his ruler's mind, and there will be good fortune.",
+    "Its subject with an additional screen of a large and thick banner, through which at midday he can see the small Mei star. In the darkness he breaks his right arm; but there will be no error.",
+    "Its subject in a tent so large and thick that at midday he can see from it the constellation of the Bushel. But he meets with the subject of the first line, undivided like himself. There will be good fortune.",
+    "Its subject bringing around him the men of brilliant ability. There will be occasion for congratulation and praise. There will be good fortune.",
+    "Its subject with his house made large, but only serving as a screen to his household. When he looks at his door, it is still, and there is nobody about it. For three years no one is to be seen. There will be evil."
+    ]
+  },
+  56: {
+    yao: [
+    "The stranger mean and meanly occupied. It is thus that he brings on himself further calamity.",
+    "The stranger, occupying his lodging-house, carrying with him his means of livelihood, and provided with good and trusty servants.",
+    "The stranger, burning his lodging-house, and having lost his servants. However firm and correct he try to be, he will be in peril.",
+    "The traveller in a resting-place, having also the means of livelihood and the axe, but still saying, 'I am not at ease in my mind.'",
+    "Its subject shooting a pheasant. He will lose his arrow, but in the end he will obtain praise and a high charge.",
+    "A bird burning its nest. The stranger, thus represented, first laughs and then cries out. He has lost his ox-like docility too readily and easily. There will be evil."
+    ]
+  },
+  57: {
+    yao: [
+    "Its subject now advancing, now receding. It would be advantageous for him to have the firm correctness of a brave soldier.",
+    "The representative of Sun beneath a couch, and employing diviners and exorcists in a way bordering on confusion. There will be good fortune and no error.",
+    "Its subject penetrating only by violent and repeated efforts. There will be occasion for regret.",
+    "All occasion for repentance in its subject passed away. He takes game for its threefold use in his hunting.",
+    "With firm correctness there will be good fortune to its subject. All occasion for repentance will disappear, and all his movements will be advantageous. There may have been no good beginning, but there will be a good end. Three days before making any changes, let him give notice of them; and three days after, let him reconsider them. There will thus be good fortune.",
+    "The representative of penetration beneath a couch, and having lost the axe with which he executed his decisions. However firm and correct he may try to be, there will be evil."
+    ]
+  },
+  58: {
+    yao: [
+    "The pleasure of inward harmony. There will be good fortune.",
+    "The pleasure arising from inward sincerity. There will be good fortune. Occasion for repentance will disappear.",
+    "Its subject bringing round himself whatever can give pleasure. There will be evil.",
+    "Its subject deliberating about what to seek his pleasure in, and not at rest. He borders on what would be injurious, but there will be cause for joy.",
+    "Its subject trusting in one who would injure him. The situation is perilous.",
+    "The pleasure of its subject in leading and attracting others."
+    ]
+  },
+  59: {
+    yao: [
+    "Its subject engaged in rescuing from the impending evil and having the assistance of a strong horse. There will be good fortune.",
+    "Its subject, amid the dispersion, hurrying to his contrivance for security. All occasion for repentance will disappear.",
+    "Its subject discarding any regard to his own person. There will be no occasion for repentance.",
+    "Its subject scattering the different parties in the state; which leads to great good fortune. From the dispersion he collects again good men standing out, a crowd like a mound, which is what ordinary men would not have thought of.",
+    "Its subject amidst the dispersion issuing his great announcements as the perspiration flows from his body. He scatters abroad also the accumulations in the royal granaries. There will be no error.",
+    "Its subject disposing of what may be called its bloody wounds, and going and separating himself from its anxious fears. There will be no error."
+    ]
+  },
+  60: {
+    yao: [
+    "Its subject not quitting the courtyard outside his door. There will be no error.",
+    "Its subject not quitting the courtyard inside his gate. There will be evil.",
+    "Its subject with no appearance of observing the proper regulations, in which case we shall see him lamenting. But there will be no one to blame but himself.",
+    "Its subject quietly and naturally attentive to all regulations. There will be progress and success.",
+    "Its subject sweetly and acceptably enacting his regulations. There will be good fortune. The onward progress with them will afford ground for admiration.",
+    "Its subject enacting regulations severe and difficult. Even with firmness and correctness there will be evil. But though there will be cause for repentance, it will by and by disappear."
+    ]
+  },
+  61: {
+    yao: [
+    "Its subject resting in himself. There will be good fortune. If he sought to any other, he would not find rest.",
+    "Its subject like the crane crying out in her hidden retirement, and her young ones responding to her. It is as if it were said, 'I have a cup of good spirits,' and the response were, 'I will partake of it with you.'",
+    "Its subject having met with his mate. Now he beats his drum, and now he leaves off. Now he weeps, and now he sings.",
+    "Its subject like the moon nearly full, and like a horse in a chariot whose fellow disappears. There will be no error.",
+    "Its subject perfectly sincere, and linking others to him in closest union. There will be no error.",
+    "Its subject in chanticleer trying to mount to heaven. Even with firm correctness there will be evil."
+    ]
+  },
+  62: {
+    yao: [
+    "A bird flying, and ascending till the issue is evil.",
+    "Its subject passing by his grandfather, and meeting with his grandmother; not attempting anything against his ruler, but meeting him as his minister. There will be no error.",
+    "Its subject taking no extraordinary precautions against danger; and some in consequence finding opportunity to assail and injure him. There will be evil.",
+    "Its subject falling into no error, but meeting the exigency of his situation, without exceeding in his natural course. If he go forward, there will be peril, and he must be cautious. There is no occasion to be using firmness perpetually.",
+    "Dense clouds, but no rain, coming from our borders in the west. It also shows the prince shooting his arrow, and taking the bird in a cave.",
+    "Its subject not meeting the exigency of his situation, and exceeding his proper course. It suggests the idea of a bird flying far aloft. There will be evil. The case is what is called one of calamity and self-produced injury."
+    ]
+  },
+  63: {
+    yao: [
+    "Its subject as a driver who drags back his wheel, or as a fox which has wet his tail. There will be no error.",
+    "Its subject as a wife who has lost her carriage-screen. There is no occasion to go in pursuit of it. In seven days she will find it.",
+    "The case of Kâo Zung, who attacked the Demon region, but was three years in subduing it. Small men should not be employed in such enterprises.",
+    "Its subject with rags provided against any leak in his boat, and on his guard all day long.",
+    "Its subject as the neighbour in the east who slaughters an ox for his sacrifice; but this is not equal to the small spring sacrifice of the neighbour in the west, whose sincerity receives the blessing.",
+    "Its subject with even his head immersed. The position is perilous."
+    ]
+  },
+  64: {
+    yao: [
+    "Its subject like a fox whose tail gets immersed. There will be occasion for regret.",
+    "Its subject dragging back his carriage-wheel. With firmness and correctness there will be good fortune.",
+    "Its subject, with the state of things not yet remedied, advancing on; which will lead to evil. But there will be advantage in trying to cross the great stream.",
+    "Its subject by firm correctness obtaining good fortune, so that all occasion for repentance disappears. Let him stir himself up, as if he were invading the Demon region, where for three years rewards will come to him and his troops from the great kingdom.",
+    "Its subject by firm correctness obtaining good fortune, and having no occasion for repentance. We see in him the brightness of a superior man, and the possession of sincerity. There will be good fortune.",
+    "Its subject full of confidence and therefore feasting quietly. There will be no error. If he cherish this confidence, till he is like the fox who gets his head immersed, it will fail of what is right."
+    ]
+  },
+};
+
+let lang = 'zh';
+let textVersion = 'zh';
+
+const VERSION_LABELS = { zh:'原文', baihua:'白話', en2026:'2026', legge:'Legge 1899' };
+const VERSION_GROUPS = { zh:['zh','baihua'], en:['en2026','legge'] };
+
+function wilhelmUrl(number){
+  return `https://www.wisdomportal.com/IChing/Hexagram${number}.html`;
+}
+
+function getGuaciText(hex){
+  switch(textVersion){
+    case 'baihua': return BAIHUA_GUACI[hex.number] || hex.guaci;
+    case 'en2026': return ENGLISH_GUACI[hex.number] || hex.guaci;
+    case 'legge':  return LEGGE_GUACI[hex.number] || hex.guaci;
+    default:       return hex.guaci;
+  }
+}
+
+function getYaoText(hex, pos){
+  switch(textVersion){
+    case 'baihua': return (BAIHUA_YAO[hex.number] && BAIHUA_YAO[hex.number].yao[pos]) || hex.yao[pos];
+    case 'en2026': return (ENGLISH_YAO[hex.number] && ENGLISH_YAO[hex.number].yao[pos]) || hex.yao[pos];
+    case 'legge':  return (LEGGE_YAO[hex.number] && LEGGE_YAO[hex.number].yao[pos]) || hex.yao[pos];
+    default:       return hex.yao[pos];
+  }
+}
+
+function getYongText(hex){
+  switch(textVersion){
+    case 'baihua': return (BAIHUA_YAO[hex.number] && BAIHUA_YAO[hex.number].yong) || hex.yong;
+    case 'en2026': return (ENGLISH_YAO[hex.number] && ENGLISH_YAO[hex.number].yong) || hex.yong;
+    case 'legge':  return (LEGGE_YAO[hex.number] && LEGGE_YAO[hex.number].yong) || hex.yong;
+    default:       return hex.yong;
+  }
+}
+
+// 確保目前的版本選擇，跟目前的 UI 語言（中／英）是相容的一組；
+// 切換 UI 語言時，若原本選的版本不屬於新語言的按鈕組，就回到該組的預設值。
+function syncVersionToLang(){
+  const group = VERSION_GROUPS[lang];
+  if(!group.includes(textVersion)){
+    textVersion = group[0];
+  }
+}
+
+function versionToggleHtml(number){
+  const group = VERSION_GROUPS[lang];
+  const btns = group.map(v=>
+    `<button class="version-btn${textVersion===v?' active':''}" data-version="${v}">${VERSION_LABELS[v]}</button>`
+  ).join('');
+  const wilhelmBtn = lang==='en'
+    ? `<a class="version-btn wilhelm-btn" href="${wilhelmUrl(number)}" target="_blank" rel="noopener">Wilhelm 1950 ↗</a>`
+    : '';
+  return `<div class="version-toggle">
+    <div class="version-btns">${btns}${wilhelmBtn}</div>
+  </div>`;
+}
+
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.version-btn:not(.wilhelm-btn)');
+  if(!btn) return;
+  textVersion = btn.dataset.version;
+  if(hexModalOverlay.classList.contains('show') && currentModalNum){
+    openHexModal(currentModalNum);
+  } else if(lastResult && resultCard.classList.contains('show')){
+    renderResult(lastResult.hex, lastResult.zhiHex, lastResult.lines, lastResult.question);
+  }
+});
+
+const T = {
+  zh: {
+    eyebrow: '起卦、觀卦、品卦',
+    title: '易經卜卦',
+    breatheHint: '跟著圓點的節奏，慢慢吸氣、吐氣',
+    placeholder: '（選填）寫下你想問的事，起卦後會一併記錄',
+    confirmText: '確定要重新起卦嗎？這次結果仍會留在下方的歷史記錄。',
+    confirmYes: '確定，重新起卦',
+    confirmNo: '取消',
+    historyTitle: '歷史記錄（本次瀏覽）',
+    empty: '尚無記錄',
+    promptFirst: '深呼吸，靜下心來，在心中默念你想問的事。\n準備好了，就按下按鈕。',
+    promptNext: () => `再次深呼吸。\n吸氣……吐氣……於心中再默念一次你的問題。\n吸氣……………吐氣……………`,
+    doneText: '六爻已成，靜下心看看卦象怎麼說。\n若要再起一卦，請寫下新的問題，再次按下按鈕即可。',
+    castLine: n => `擲第 ${n} 爻`,
+    castAgain: '再起一卦',
+    quickCast: '⚡ 快速起卦',
+    progress: (n, pos, moving) => `第 ${n} / 6 爻・${pos}${moving?'（動）':''}`,
+    positions: ['初爻','二爻','三爻','四爻','五爻','上爻'],
+    yang: '陽', yin: '陰',
+    guaNum: n => `第${n}卦`,
+    benGua: '本卦', zhiGua: '之卦',
+    arrow: () => `變之`,
+    sectionTitle: '爻辭',
+    noChange: '六爻皆靜，以卦辭為斷。',
+    yongJiu: '用九', yongLiu: '用六',
+    asked: q => `所問：${q}`,
+    locale: 'zh-TW',
+    lookupTitle: '查詢卦象',
+    lookupPlaceholder: '輸入卦名或卦號（1–64）',
+    lookupBtn: '查詢',
+    lookupError: '找不到這一卦，請確認卦名或卦號（1–64）。'
+  },
+  en: {
+    eyebrow: 'Cast · Contemplate · Reflect',
+    title: 'I Ching Casting',
+    breatheHint: 'Follow the dot\u2019s rhythm — breathe in, breathe out',
+    placeholder: '(Optional) Write down what you want to ask — it will be saved with the reading',
+    confirmText: 'Start a new casting? This result will stay in your history below.',
+    confirmYes: 'Yes, start over',
+    confirmNo: 'Cancel',
+    historyTitle: 'History (this session)',
+    empty: 'No readings yet',
+    promptFirst: 'Breathe deeply. Quiet your mind, and silently repeat your question.\nWhen ready, press the button.',
+    promptNext: () => `Breathe again.\nIn……out……repeat your question once more in your mind.\nIn…………out…………`,
+    doneText: 'All six lines are cast. Sit with the hexagram for a moment.\nTo cast again, write a new question and press the button.',
+    castLine: n => `Cast Line ${n}`,
+    castAgain: 'Cast Again',
+    quickCast: '⚡ Quick Cast',
+    progress: (n, pos, moving) => `Line ${n} / 6 · ${pos}${moving?' (changing)':''}`,
+    positions: ['Line 1','Line 2','Line 3','Line 4','Line 5','Line 6'],
+    yang: 'Yang', yin: 'Yin',
+    guaNum: n => `#${n}`,
+    benGua: 'Present', zhiGua: 'Changes to',
+    arrow: () => `changes to`,
+    sectionTitle: 'Line Texts',
+    noChange: 'No changing lines — read by the Judgment.',
+    yongJiu: 'All Nines', yongLiu: 'All Sixes',
+    asked: q => `Question: ${q}`,
+    locale: 'en-US',
+    lookupTitle: 'Look Up a Hexagram',
+    lookupPlaceholder: 'Enter a name or number (1–64)',
+    lookupBtn: 'Search',
+    lookupError: "Couldn't find that hexagram — check the name or number (1–64)."
+  }
+};
+
 function tossCoin(){ return Math.random()<0.5 ? 2 : 3; }
 
 function escapeHtml(str){
@@ -335,7 +2732,6 @@ let history = [];
 let castLines = [];
 let currentQuestion = '';
 let hasResult = false;
-const POSITIONS = ['初爻','二爻','三爻','四爻','五爻','上爻'];
 
 const coinsEl = document.getElementById('coins');
 const castBtn = document.getElementById('castBtn');
@@ -344,9 +2740,6 @@ const hexLinesEl = document.getElementById('hexLines');
 const resultCard = document.getElementById('resultCard');
 const historyEl = document.getElementById('history');
 const questionEl = document.getElementById('question');
-
-const PROMPT_FIRST = '深呼吸，靜下心來，在心中默念你想問的事。\n準備好了，就按下按鈕。';
-const promptNext = n => `再次深呼吸。\n吸氣……吐氣……於心中再默念一次你的問題。\n吸氣……………吐氣……………`;
 
 (function playIntro(){
   const overlay = document.getElementById('introOverlay');
@@ -368,22 +2761,84 @@ function addRow(pos, bit, moving){
   const marker = moving ? '<span class="moving"></span>' : '<span class="no-move"></span>';
   const row = document.createElement('div');
   row.className = 'hexrow pop';
-  row.innerHTML = `<span class="label">${POSITIONS[pos]}</span><div class="yao">${bars}</div>${marker}`;
+  row.innerHTML = `<span class="label">${T[lang].positions[pos]}</span><div class="yao">${bars}</div>${marker}`;
   hexLinesEl.prepend(row);
 }
 
-castBtn.textContent = '擲第 1 爻';
+castBtn.textContent = T[lang].castLine(1);
 const confirmRow = document.getElementById('confirmRow');
 const confirmYes = document.getElementById('confirmYes');
 const confirmNo = document.getElementById('confirmNo');
+const quickCastBtn = document.getElementById('quickCastBtn');
+let pendingAction = 'reset';
+
+function resetForNewCasting(){
+  hasResult = false;
+  resultCard.classList.remove('show');
+  resetRows();
+  questionEl.value = '';
+  questionEl.disabled = false;
+  castBtn.textContent = T[lang].castLine(1);
+  castHintEl.innerHTML = T[lang].promptFirst.replace(/\n/g, '<br>');
+  progressEl.textContent = '';
+  coinsEl.querySelectorAll('.coin').forEach(el=>{
+    el.textContent = '－';
+    el.classList.remove('yang','yin');
+  });
+}
+
+async function performQuickCast(){
+  castBtn.disabled = true;
+  quickCastBtn.disabled = true;
+  resultCard.classList.remove('show');
+  resetRows();
+  currentQuestion = questionEl.value.trim();
+  questionEl.disabled = true;
+  castLines = [];
+  for(let i=0; i<6; i++){
+    const c1=tossCoin(), c2=tossCoin(), c3=tossCoin();
+    const sum=c1+c2+c3;
+    const yang=(sum===7||sum===9);
+    const moving=(sum===6||sum===9);
+    castLines.push({bit: yang?1:0, moving});
+    coinsEl.querySelectorAll('.coin').forEach((el,idx)=>{
+      const v=[c1,c2,c3][idx];
+      el.textContent = v===3 ? T[lang].yang : T[lang].yin;
+      el.classList.remove('yang','yin');
+      el.classList.add(v===3 ? 'yang' : 'yin');
+      el.classList.toggle('small-text', lang==='en');
+    });
+    addRow(i, yang?1:0, moving);
+    progressEl.textContent = T[lang].progress(i+1, T[lang].positions[i], moving);
+    await new Promise(r=>setTimeout(r, 90));
+  }
+  castHintEl.innerHTML = T[lang].doneText.replace(/\n/g, '<br>');
+  finishCast(castLines);
+  castLines = [];
+  hasResult = true;
+  castBtn.textContent = T[lang].castAgain;
+  castBtn.disabled = false;
+  quickCastBtn.disabled = false;
+}
 
 castBtn.addEventListener('click', () => {
   if(hasResult){
+    pendingAction = 'reset';
     castBtn.style.display = 'none';
     confirmRow.style.display = 'block';
     return;
   }
   tossOnce();
+});
+
+quickCastBtn.addEventListener('click', () => {
+  if(hasResult){
+    pendingAction = 'quickcast';
+    castBtn.style.display = 'none';
+    confirmRow.style.display = 'block';
+    return;
+  }
+  performQuickCast();
 });
 
 confirmNo.addEventListener('click', () => {
@@ -392,20 +2847,13 @@ confirmNo.addEventListener('click', () => {
 });
 
 confirmYes.addEventListener('click', () => {
-  hasResult = false;
-  resultCard.classList.remove('show');
-  resetRows();
-  questionEl.value = '';
-  questionEl.disabled = false;
-  castBtn.textContent = '擲第 1 爻';
-  castHintEl.innerHTML = PROMPT_FIRST.replace(/\n/g, '<br>');
-  progressEl.textContent = '';
-  coinsEl.querySelectorAll('.coin').forEach(el=>{
-    el.textContent = '－';
-    el.classList.remove('yang','yin');
-  });
   confirmRow.style.display = 'none';
   castBtn.style.display = 'block';
+  resetForNewCasting();
+  if(pendingAction === 'quickcast'){
+    performQuickCast();
+  }
+  pendingAction = 'reset';
 });
 
 const castHintEl = document.getElementById('castHint');
@@ -445,34 +2893,37 @@ async function tossOnce(){
 
   coinsEl.querySelectorAll('.coin').forEach((el,idx)=>{
     const v=[c1,c2,c3][idx];
-    el.textContent = v===3 ? '陽' : '陰';
+    el.textContent = v===3 ? T[lang].yang : T[lang].yin;
     el.classList.remove('yang','yin');
     el.classList.add(v===3 ? 'yang' : 'yin');
+    el.classList.toggle('small-text', lang==='en');
     el.classList.remove('flip'); void el.offsetWidth; el.classList.add('flip');
   });
 
   const pos = castLines.length-1;
   addRow(pos, yang?1:0, moving);
-  progressEl.textContent = `第 ${pos+1} / 6 爻・${POSITIONS[pos]}${moving?'（動）':''}`;
+  progressEl.textContent = T[lang].progress(pos+1, T[lang].positions[pos], moving);
 
   const isLast = castLines.length === 6;
   const nextPromptText = isLast
-    ? '六爻已成，靜下心看看卦象怎麼說。\n若要再起一卦，請寫下新的問題，再次按下按鈕即可。'
-    : promptNext(castLines.length+1);
+    ? T[lang].doneText
+    : T[lang].promptNext(castLines.length+1);
 
   if(!isLast){
     castBtn.disabled = true;
     await typewriterReveal(nextPromptText, castHintEl, 150);
     castBtn.disabled = false;
-    castBtn.textContent = `擲第 ${castLines.length+1} 爻`;
+    castBtn.textContent = T[lang].castLine(castLines.length+1);
   } else {
     castHintEl.textContent = nextPromptText;
     finishCast(castLines);
     castLines = [];
     hasResult = true;
-    castBtn.textContent = '再起一卦';
+    castBtn.textContent = T[lang].castAgain;
   }
 }
+
+let lastResult = null;
 
 function finishCast(lines){
   const bits = lines.map(l=>l.bit);
@@ -484,6 +2935,7 @@ function finishCast(lines){
     const zhiBits = bits.map((b,idx)=> lines[idx].moving ? (1-b) : b);
     zhiHex = BY_KEY[zhiBits.join('')];
   }
+  lastResult = {hex, zhiHex, lines, question: currentQuestion};
   renderResult(hex, zhiHex, lines, currentQuestion);
   history.unshift({time:new Date(), hex, zhiHex, hasMoving, question: currentQuestion});
   renderHistory();
@@ -493,62 +2945,222 @@ function finishCast(lines){
   currentQuestion = '';
 }
 
+function guaNameDisplay(hex){
+  if(lang==='en'){
+    return `${ENGLISH_NAMES[hex.number]}<br><span style="font-size:12px;color:var(--sub);font-weight:400;">${coreName(hex)} ${CORE_NAME_PINYIN[hex.number]}</span>`;
+  }
+  return `${coreName(hex)}卦<br><span style="font-size:12px;color:var(--sub);font-weight:400;">${hex.name}</span>`;
+}
+
+function guaciDisplay(hex){
+  return getGuaciText(hex);
+}
+
 function renderResult(hex, zhiHex, lines, question){
   let html = '';
   if(question){
-    html += `<p class="asked">所問：${escapeHtml(question)}</p>`;
+    html += `<p class="asked">${T[lang].asked(escapeHtml(question))}</p>`;
   }
+  html += versionToggleHtml(hex.number);
   if(zhiHex){
-    html += `<div class="hex-compare">
-      <div class="hex-arrow"><b>—</b>變之→</div>
-      <div class="hex-col">
-        <div class="col-num-name"><span class="col-gua-num">第${hex.number}卦</span><span class="col-gua-name">${hex.name}</span></div>
-        <div class="col-label">本卦</div>
-        <p class="col-gua-ci">${hex.guaci}</p>
-      </div>
-      <div class="hex-col zhi-col">
-        <div class="col-num-name"><span class="col-gua-num">第${zhiHex.number}卦</span><span class="col-gua-name">${zhiHex.name}</span></div>
-        <div class="col-label">之卦</div>
-        <p class="col-gua-ci">${zhiHex.guaci}</p>
-      </div>
-    </div>`;
+    if(lang==='en'){
+      html += `<div class="hex-stack">
+        <div class="hex-stack-item">
+          <div class="col-label">${T[lang].benGua}</div>
+          <div class="col-num-name"><span class="col-gua-num">${T[lang].guaNum(hex.number)}</span><span class="col-gua-name">${guaNameDisplay(hex)}</span></div>
+          <div class="col-symbol">${hexSymbol(hex.number)}</div>
+          <p class="gua-ci-centered">${guaciDisplay(hex)}</p>
+        </div>
+        <div class="hex-stack-divider"></div>
+        <div class="hex-stack-item">
+          <div class="col-label">${T[lang].zhiGua}</div>
+          <div class="col-num-name"><span class="col-gua-num">${T[lang].guaNum(zhiHex.number)}</span><span class="col-gua-name">${guaNameDisplay(zhiHex)}</span></div>
+          <div class="col-symbol">${hexSymbol(zhiHex.number)}</div>
+          <p class="gua-ci-centered">${guaciDisplay(zhiHex)}</p>
+        </div>
+      </div>`;
+    } else {
+      html += `<div class="hex-compare">
+        <div class="hex-col">
+          <div class="col-label">${T[lang].benGua}</div>
+          <div class="col-num-name"><span class="col-gua-num">${T[lang].guaNum(hex.number)}</span><span class="col-gua-name">${guaNameDisplay(hex)}</span></div>
+          <div class="col-symbol">${hexSymbol(hex.number)}</div>
+          <p class="col-gua-ci">${guaciDisplay(hex)}</p>
+        </div>
+        <div class="hex-arrow-col"><div class="hex-arrow">${T[lang].arrow()}</div></div>
+        <div class="hex-col zhi-col">
+          <div class="col-label">${T[lang].zhiGua}</div>
+          <div class="col-num-name"><span class="col-gua-num">${T[lang].guaNum(zhiHex.number)}</span><span class="col-gua-name">${guaNameDisplay(zhiHex)}</span></div>
+          <div class="col-symbol">${hexSymbol(zhiHex.number)}</div>
+          <p class="col-gua-ci">${guaciDisplay(zhiHex)}</p>
+        </div>
+      </div>`;
+    }
   } else {
     html += `<div class="hex-single">
-      <div class="col-num-name"><span class="col-gua-num">第${hex.number}卦</span><span class="col-gua-name">${hex.name}</span></div>
-      <p class="gua-ci-centered">${hex.guaci}</p>
+      <div class="col-num-name"><span class="col-gua-num">${T[lang].guaNum(hex.number)}</span><span class="col-gua-name">${guaNameDisplay(hex)}</span></div>
+          <div class="col-symbol">${hexSymbol(hex.number)}</div>
+      <p class="gua-ci-centered">${guaciDisplay(hex)}</p>
     </div>`;
   }
 
   const movingLines = lines.map((l,idx)=>({...l, pos:idx})).filter(l=>l.moving);
   const movingSet = new Set(movingLines.map(l=>l.pos));
 
-  html += `<div class="section-title">爻辭</div>`;
+  html += `<div class="section-title">${T[lang].sectionTitle}</div>`;
   for(let pos=0; pos<6; pos++){
-    const label = lineLabel(pos, lines[pos].bit===1);
+    const label = lang==='en'
+      ? `Line ${pos+1}`
+      : lineLabel(pos, lines[pos].bit===1);
     const isMoving = movingSet.has(pos);
-    html += `<div class="yao-ci-item${isMoving?' moving-line':''}"><b>${label}</b>${hex.yao[pos]}</div>`;
+    const yaoText = getYaoText(hex, pos);
+    html += `<div class="yao-ci-item${isMoving?' moving-line':''}"><b>${label}</b>${yaoText}</div>`;
   }
   if(movingLines.length===6 && (hex.number===1 || hex.number===2)){
-    const label = hex.number===1 ? '用九' : '用六';
-    html += `<div class="yao-ci-item moving-line"><b>${label}</b>${hex.yong}</div>`;
+    const label = hex.number===1 ? T[lang].yongJiu : T[lang].yongLiu;
+    const yongText = getYongText(hex);
+    html += `<div class="yao-ci-item moving-line"><b>${label}</b>${yongText}</div>`;
   }
   if(movingLines.length===0){
-    html += '<p class="no-change">六爻皆靜，以卦辭為斷。</p>';
+    html += `<p class="no-change">${T[lang].noChange}</p>`;
   }
 
   resultCard.innerHTML = html;
   resultCard.classList.add('show');
 }
 
+function historyName(hex){
+  return lang==='en' ? ENGLISH_NAMES[hex.number] : hex.name;
+}
+
 function renderHistory(){
-  if(history.length===0){ historyEl.innerHTML = '<p class="empty">尚無記錄</p>'; return; }
+  if(history.length===0){ historyEl.innerHTML = `<p class="empty">${T[lang].empty}</p>`; return; }
   historyEl.innerHTML = history.map(h=>{
-    const t = h.time.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
-    const label = h.hasMoving ? `${h.hex.name} → ${h.zhiHex.name}` : h.hex.name;
+    const t = h.time.toLocaleTimeString(T[lang].locale, {hour:'2-digit',minute:'2-digit'});
+    const label = h.hasMoving ? `${historyName(h.hex)} → ${historyName(h.zhiHex)}` : historyName(h.hex);
     const q = h.question ? `<br><span style="font-size:12px;">${escapeHtml(h.question)}</span>` : '';
     return `<div class="hist-item"><span>${t}${q}</span><span>${label}</span></div>`;
   }).join('');
 }
+
+const langToggle = document.getElementById('langToggle');
+const eyebrowEl = document.getElementById('eyebrowText');
+const pageTitleEl = document.getElementById('pageTitle');
+const breatheHintEl = document.getElementById('breatheHint');
+const confirmTextEl = document.getElementById('confirmText');
+const historyTitleEl = document.getElementById('historyTitle');
+const lookupTitleEl = document.getElementById('lookupTitle');
+const hexGridEl = document.getElementById('hexGrid');
+const hexModalOverlay = document.getElementById('hexModalOverlay');
+const hexModalBody = document.getElementById('hexModalBody');
+const hexModalClose = document.getElementById('hexModalClose');
+const hexModalLang = document.getElementById('hexModalLang');
+
+const BAGUA_ORDER = ['乾','兌','離','震','巽','坎','艮','坤'];
+
+function populateHexGrid(){
+  let html = '';
+  BAGUA_ORDER.forEach(lower=>{
+    BAGUA_ORDER.forEach(upper=>{
+      const bits = [...TRIGRAMS[lower], ...TRIGRAMS[upper]];
+      const hex = BY_KEY[bits.join('')];
+      html += `<div class="hex-grid-cell" data-num="${hex.number}">
+        <div class="hex-grid-symbol">${hexSymbol(hex.number)}</div>
+        <div class="hex-grid-num">${String(hex.number).padStart(2,'0')}</div>
+      </div>`;
+    });
+  });
+  hexGridEl.innerHTML = html;
+}
+
+let currentModalNum = null;
+
+function openHexModal(num){
+  currentModalNum = num;
+  const hex = HEXAGRAMS.find(h=>h.number===num);
+  if(!hex) return;
+  const lines = hex.bits.map(b=>({bit:b, moving:false}));
+  hexModalBody.innerHTML = `
+    <div class="col-num-name" style="text-align:center;">
+      <span class="col-gua-num">${T[lang].guaNum(hex.number)}</span>
+      <span class="col-gua-name" style="font-family:var(--font-head);font-weight:700;font-size:18px;">${guaNameDisplay(hex)}</span>
+    </div>
+    <div class="col-symbol" style="font-size:30px;line-height:1;color:var(--ink);margin:6px 0 4px;text-align:center;">${hexSymbol(hex.number)}</div>
+    ${versionToggleHtml(hex.number)}
+    <p class="gua-ci-centered">${guaciDisplay(hex)}</p>
+    <div class="section-title">${T[lang].sectionTitle}</div>
+    ${lines.map((l,pos)=>{
+      const label = lang==='en' ? `Line ${pos+1}` : lineLabel(pos, l.bit===1);
+      const yaoText = getYaoText(hex, pos);
+      return `<div class="yao-ci-item"><b>${label}</b>${yaoText}</div>`;
+    }).join('')}
+  `;
+  hexModalOverlay.classList.add('show');
+}
+
+hexGridEl.addEventListener('click', (e)=>{
+  const cell = e.target.closest('.hex-grid-cell[data-num]');
+  if(cell) openHexModal(parseInt(cell.dataset.num, 10));
+});
+
+hexModalClose.addEventListener('click', ()=> hexModalOverlay.classList.remove('show'));
+hexModalLang.addEventListener('click', () => {
+  lang = lang==='zh' ? 'en' : 'zh';
+  syncVersionToLang();
+  applyLanguage();
+});
+hexModalOverlay.addEventListener('click', (e)=>{
+  if(e.target === hexModalOverlay) hexModalOverlay.classList.remove('show');
+});
+
+populateHexGrid();
+
+function applyLanguage(){
+  langToggle.textContent = lang==='zh' ? 'EN' : '中文';
+  hexModalLang.textContent = lang==='zh' ? 'EN' : '中文';
+  eyebrowEl.textContent = T[lang].eyebrow;
+  pageTitleEl.textContent = T[lang].title;
+  breatheHintEl.textContent = T[lang].breatheHint;
+  questionEl.placeholder = T[lang].placeholder;
+  confirmTextEl.textContent = T[lang].confirmText;
+  confirmYes.textContent = T[lang].confirmYes;
+  confirmNo.textContent = T[lang].confirmNo;
+  historyTitleEl.textContent = T[lang].historyTitle;
+  lookupTitleEl.textContent = T[lang].lookupTitle;
+  populateHexGrid();
+  if(hexModalOverlay.classList.contains('show') && currentModalNum){
+    openHexModal(currentModalNum);
+  }
+  quickCastBtn.textContent = T[lang].quickCast;
+
+  if(hasResult){
+    castBtn.textContent = T[lang].castAgain;
+    castHintEl.innerHTML = T[lang].doneText.replace(/\n/g, '<br>');
+  } else if(castLines.length===0){
+    castBtn.textContent = T[lang].castLine(1);
+    castHintEl.innerHTML = T[lang].promptFirst.replace(/\n/g, '<br>');
+  } else {
+    castBtn.textContent = T[lang].castLine(castLines.length+1);
+    castHintEl.innerHTML = T[lang].promptNext().replace(/\n/g, '<br>');
+  }
+
+  coinsEl.querySelectorAll('.coin').forEach(el=>{
+    if(el.classList.contains('yang')) el.textContent = T[lang].yang;
+    else if(el.classList.contains('yin')) el.textContent = T[lang].yin;
+    el.classList.toggle('small-text', lang==='en');
+  });
+
+  if(lastResult && resultCard.classList.contains('show')){
+    renderResult(lastResult.hex, lastResult.zhiHex, lastResult.lines, lastResult.question);
+  }
+  renderHistory();
+}
+
+langToggle.addEventListener('click', () => {
+  lang = lang==='zh' ? 'en' : 'zh';
+  syncVersionToLang();
+  applyLanguage();
+});
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>

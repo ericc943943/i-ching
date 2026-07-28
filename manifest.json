@@ -1,0 +1,16 @@
+{
+  "name": "易經卜卦 HexCasting",
+  "short_name": "易經卜卦",
+  "description": "起卦、觀卦、品卦 — 樹根樹洞 HexCasting",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F2EEE3",
+  "theme_color": "#7A5230",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
